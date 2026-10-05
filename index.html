@@ -1,0 +1,1672 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Retool Source Control Handbook">
+<meta property="og:description" content="A Stackdrop handbook for builders new to Retool Source Control, in three parts: before you start, everyday workflow, and troubleshooting.">
+<meta property="og:image" content="img/s02-protect-menu.png">
+<meta name="twitter:card" content="summary_large_image">
+<style>
+  :root { color-scheme: light; box-sizing: border-box; padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); }
+  *, *::before, *::after { box-sizing: inherit; }
+  body { margin: 0; }
+  img { max-width: 100%; }
+</style>
+<title>Retool Source Control Handbook</title>
+<meta name="description" content="A Stackdrop handbook for builders new to Retool Source Control, in three parts: before you start, everyday workflow, and troubleshooting.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,100..900&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<style>
+  :root {
+    --ground: #f7f6f3;
+    --paper: #fdfcfa;
+    --ink: #15140e;
+    --ink-2: #45433a;
+    --muted: #726f66;
+    --line: #e2dfd6;
+    --line-strong: #c9c5b9;
+    --panel: #efede6;
+    --code-bg: #f1efe8;
+    --primary: #2b4cc5;
+    --primary-ink: #ffffff;
+    --primary-soft: #e5eafb;
+    --branch: #b14a16;
+    --develop: #6b4fb8;
+    --ok: #2d7a4b;
+    --ok-soft: #e2f0e7;
+    --warn: #875800;
+    --warn-soft: #f6ecd5;
+    --bad: #b3261e;
+    --bad-soft: #f8e4e1;
+    --tok-tag: #2b4cc5;
+    --tok-attr: #875800;
+    --tok-str: #2d7a4b;
+    --tok-kw: #b14a16;
+    --tok-com: #8b887f;
+    --ring: #e8590c;
+    --sans: "Archivo", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    --mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      color-scheme: dark;
+      --ground: #0e0e10;
+      --paper: #16161a;
+      --ink: #ebe9e1;
+      --ink-2: #bebbb1;
+      --muted: #8e8b83;
+      --line: #2a2a30;
+      --line-strong: #3d3d45;
+      --panel: #1c1c21;
+      --code-bg: #131316;
+      --primary: #8ea3f0;
+      --primary-ink: #0e0e10;
+      --primary-soft: #1d2442;
+      --branch: #f0935d;
+      --develop: #b39df0;
+      --ok: #7cc89b;
+      --ok-soft: #14281c;
+      --warn: #e3b35f;
+      --warn-soft: #2d2412;
+      --bad: #f28b81;
+      --bad-soft: #2f1614;
+      --tok-tag: #8ea3f0;
+      --tok-attr: #e3b35f;
+      --tok-str: #7cc89b;
+      --tok-kw: #f0935d;
+      --tok-com: #7d7a72;
+      --ring: #ff8f4d;
+    }
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --ground: #0e0e10;
+    --paper: #16161a;
+    --ink: #ebe9e1;
+    --ink-2: #bebbb1;
+    --muted: #8e8b83;
+    --line: #2a2a30;
+    --line-strong: #3d3d45;
+    --panel: #1c1c21;
+    --code-bg: #131316;
+    --primary: #8ea3f0;
+    --primary-ink: #0e0e10;
+    --primary-soft: #1d2442;
+    --branch: #f0935d;
+    --develop: #b39df0;
+    --ok: #7cc89b;
+    --ok-soft: #14281c;
+    --warn: #e3b35f;
+    --warn-soft: #2d2412;
+    --bad: #f28b81;
+    --bad-soft: #2f1614;
+    --tok-tag: #8ea3f0;
+    --tok-attr: #e3b35f;
+    --tok-str: #7cc89b;
+    --tok-kw: #f0935d;
+    --tok-com: #7d7a72;
+    --ring: #ff8f4d;
+  }
+
+  [hidden] { display: none !important; }
+  html { font-size: 16px; }
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { transition: none !important; animation: none !important; scroll-behavior: auto !important; }
+  }
+  body {
+    background: var(--ground);
+    color: var(--ink-2);
+    font-family: var(--sans);
+    font-size: 1rem;
+    line-height: 1.62;
+    padding-inline: 16px;
+    padding-block: 0 72px;
+    -webkit-font-smoothing: antialiased;
+  }
+  a { color: var(--primary); text-underline-offset: 2px; }
+  a:hover { text-decoration-thickness: 2px; }
+  :focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; border-radius: 4px; }
+  strong { color: var(--ink); font-weight: 650; }
+  h1, h2, h3, h4 { color: var(--ink); text-wrap: balance; margin: 0; }
+  p { margin: 0; max-width: 68ch; }
+  ul, ol { margin: 0; padding-left: 1.2rem; }
+  .wrap { max-width: 1080px; margin-inline: auto; }
+
+  /* ---------- top bar ---------- */
+  .bar {
+    display: flex; flex-wrap: wrap; align-items: center; gap: .4rem 1.5rem;
+    padding-block: 18px;
+    border-bottom: 1px solid var(--line);
+    font-family: var(--mono); font-size: .74rem; letter-spacing: .04em; color: var(--muted);
+  }
+  .wordmark {
+    font-family: var(--sans); font-stretch: 112%; font-weight: 800; font-size: 1.05rem;
+    letter-spacing: -.01em; color: var(--ink); text-decoration: none;
+    display: inline-flex; align-items: center; gap: .5rem;
+  }
+  .wordmark svg { width: 18px; height: 18px; }
+  .bar .crumb { text-transform: uppercase; }
+  .bar .ver { margin-left: auto; display: inline-flex; flex-wrap: wrap; gap: .6rem; align-items: center; }
+  .pill {
+    display: inline-block; font-family: var(--mono); font-size: .68rem; font-weight: 600;
+    letter-spacing: .06em; text-transform: uppercase;
+    padding: .18rem .5rem; border-radius: 999px;
+    background: var(--warn-soft); color: var(--warn);
+  }
+
+  /* ---------- hero ---------- */
+  .hero { padding-block: clamp(32px, 5vw, 60px) 28px; display: grid; gap: 20px; }
+  .eyebrow {
+    font-family: var(--mono); font-size: .74rem; font-weight: 600; letter-spacing: .09em;
+    text-transform: uppercase; color: var(--primary);
+  }
+  .hero h1 {
+    font-size: clamp(2.4rem, 6vw, 4.4rem);
+    font-stretch: 118%; font-weight: 820; line-height: .98; letter-spacing: -.025em;
+  }
+  .hero h1 em { font-style: normal; color: var(--primary); }
+  .lede { font-size: clamp(1.05rem, 1.5vw, 1.2rem); line-height: 1.55; max-width: 60ch; }
+  .facts { display: flex; flex-wrap: wrap; gap: .5rem; }
+  .fact {
+    font-family: var(--mono); font-size: .76rem; color: var(--ink-2);
+    border: 1px solid var(--line-strong); border-radius: 999px; padding: .28rem .7rem;
+    background: var(--paper);
+  }
+  .fact b { color: var(--ink); font-weight: 600; }
+
+  /* ---------- part tabs ---------- */
+  .parts-bar {
+    position: sticky; top: env(safe-area-inset-top, 0px); z-index: 10;
+    background: var(--ground);
+    padding-block: 10px;
+    margin-bottom: 36px;
+  }
+  .parts {
+    display: grid; grid-template-columns: repeat(3, minmax(0, 1fr));
+    background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 5px; gap: 5px;
+  }
+  .part-tab {
+    appearance: none; border: 0; cursor: pointer; font: inherit; text-align: left;
+    background: transparent; color: var(--ink-2); border-radius: 10px;
+    padding: 12px 16px; display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 2px 12px; align-items: baseline;
+  }
+  .part-tab .n { font-family: var(--mono); font-size: .76rem; font-weight: 600; color: var(--muted); grid-row: span 2; }
+  .part-tab .l { font-size: 1.02rem; font-weight: 700; font-stretch: 106%; color: var(--ink); line-height: 1.25; }
+  .part-tab .s { font-size: .82rem; color: var(--muted); line-height: 1.35; }
+  .part-tab:hover { background: var(--paper); }
+  .part-tab[aria-selected="true"] { background: var(--paper); box-shadow: 0 1px 0 var(--line-strong), 0 0 0 1px var(--line-strong); }
+  .part-tab[aria-selected="true"] .n { color: var(--primary); }
+  .part-tab:focus-visible { outline-offset: -2px; }
+  @media (max-width: 700px) {
+    .part-tab { padding: 10px; grid-template-columns: minmax(0, 1fr); }
+    .part-tab .n { grid-row: auto; }
+    .part-tab .l { font-size: .9rem; }
+    .part-tab .s { display: none; }
+  }
+
+  /* ---------- part panels ---------- */
+  .part { display: grid; gap: 64px; min-width: 0; }
+  .part-head { display: grid; gap: 12px; padding-bottom: 28px; border-bottom: 2px solid var(--ink); }
+  .part-head h2 { font-size: clamp(1.9rem, 3.6vw, 2.6rem); font-stretch: 114%; font-weight: 800; line-height: 1.05; letter-spacing: -.02em; }
+  .part-head p { font-size: 1.05rem; }
+  .jump { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; }
+  .jump a {
+    font-size: .84rem; text-decoration: none; color: var(--ink-2);
+    border: 1px solid var(--line); background: var(--paper); border-radius: 999px; padding: .25rem .75rem;
+  }
+  .jump a:hover { border-color: var(--primary); color: var(--primary); }
+  .part-foot { display: flex; flex-wrap: wrap; gap: 10px; justify-content: space-between; padding-top: 24px; border-top: 1px solid var(--line); }
+  .part-foot .btn { display: grid; gap: 2px; text-align: left; padding: 12px 16px; }
+  .part-foot .btn small { font-family: var(--mono); font-size: .68rem; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); font-weight: 500; }
+  .part-foot .btn.primary small { color: var(--primary-ink); opacity: .8; }
+  .part-foot .btn.next { margin-left: auto; text-align: right; }
+
+  section { display: grid; gap: 20px; min-width: 0; scroll-margin-top: 110px; }
+  .sec-head h3 { font-size: clamp(1.4rem, 2.6vw, 1.8rem); font-stretch: 110%; font-weight: 760; line-height: 1.12; letter-spacing: -.01em; }
+  h4.sub { font-size: 1.05rem; font-stretch: 104%; font-weight: 700; margin-top: 6px; }
+
+  /* ---------- inline bits ---------- */
+  .ui {
+    font-family: var(--mono); font-size: .8em; font-weight: 500; color: var(--ink);
+    background: var(--paper); border: 1px solid var(--line-strong); border-bottom-width: 2px;
+    border-radius: 5px; padding: .06em .42em; white-space: nowrap;
+  }
+  code {
+    font-family: var(--mono); font-size: .84em; color: var(--ink);
+    background: var(--code-bg); border-radius: 4px; padding: .08em .36em;
+    overflow-wrap: anywhere;
+  }
+  .src {
+    font-family: var(--mono); font-size: .66rem; font-weight: 600; letter-spacing: .05em; text-transform: uppercase;
+    color: var(--muted); text-decoration: none; border: 1px solid var(--line); border-radius: 4px;
+    padding: .06rem .36rem; white-space: nowrap; vertical-align: .12em;
+  }
+  .src:hover { color: var(--primary); border-color: var(--primary); }
+
+  .note { border-radius: 10px; padding: 16px 18px; display: grid; gap: 6px; background: var(--primary-soft); }
+  .note.warn { background: var(--warn-soft); }
+  .note-label { font-family: var(--mono); font-size: .7rem; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--primary); }
+  .note.warn .note-label { color: var(--warn); }
+  .note p { max-width: none; }
+
+  /* ---------- expanders ---------- */
+  details.more { border: 1px solid var(--line); border-radius: 12px; background: var(--paper); }
+  details.more > summary {
+    list-style: none; cursor: pointer; padding: 15px 18px;
+    display: flex; align-items: center; gap: 14px; color: var(--ink); font-weight: 650;
+  }
+  details.more > summary::-webkit-details-marker { display: none; }
+  details.more > summary::before {
+    content: ""; flex: 0 0 auto; width: 7px; height: 7px; margin-inline: 2px;
+    border-right: 2px solid var(--muted); border-bottom: 2px solid var(--muted);
+    transform: rotate(-45deg); transition: transform .2s ease;
+  }
+  details.more[open] > summary::before { transform: rotate(45deg); }
+  details.more > summary .hint { margin-left: auto; font-family: var(--mono); font-size: .68rem; font-weight: 500; letter-spacing: .05em; text-transform: uppercase; color: var(--muted); text-align: right; }
+  details.more > summary:hover .hint { color: var(--primary); }
+  .more-body { padding: 4px 18px 20px; display: grid; gap: 18px; border-top: 1px solid var(--line); padding-top: 18px; }
+
+  /* ---------- figures ---------- */
+  .figure { background: var(--paper); border: 1px solid var(--line); border-radius: 12px; padding: clamp(14px, 2.4vw, 24px); display: grid; gap: 12px; min-width: 0; margin: 0; }
+  .scroll-x { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .scroll-x svg { display: block; width: 100%; height: auto; min-width: 560px; }
+  .caption { font-size: .86rem; color: var(--muted); }
+
+  svg text { font-family: var(--mono); }
+  .s-box { fill: var(--panel); }
+  .s-card { fill: var(--paper); stroke-width: 2; }
+  .s-card.b { stroke: var(--branch); }
+  .s-card.m { stroke: var(--primary); }
+  .s-title { font-size: 11px; font-weight: 600; letter-spacing: .08em; fill: var(--muted); }
+  .s-h { font-size: 14px; font-weight: 600; fill: var(--ink); font-family: var(--sans); }
+  .s-t { font-size: 11.5px; fill: var(--ink-2); }
+  .s-t.muted { fill: var(--muted); }
+  .s-t.bad { fill: var(--bad); font-weight: 600; }
+  .s-t.b { fill: var(--branch); font-weight: 600; }
+  .s-t.m { fill: var(--primary); font-weight: 600; }
+  .s-t.d { fill: var(--develop); font-weight: 600; }
+  .s-arrow { fill: none; stroke: var(--ink); stroke-width: 2; }
+  .s-arrow.b { stroke: var(--branch); }
+  .s-arrow.m { stroke: var(--primary); }
+  .s-arrow.dash { stroke-dasharray: 5 5; }
+  .s-head { fill: var(--ink); }
+  .s-head.b { fill: var(--branch); }
+  .s-head.m { fill: var(--primary); }
+  .lane { fill: none; stroke-width: 3; stroke-linecap: round; }
+  .lane.m { stroke: var(--primary); }
+  .lane.b { stroke: var(--branch); }
+  .lane.d { stroke: var(--develop); }
+  .node { fill: var(--paper); stroke-width: 3; }
+  .node.m { stroke: var(--primary); }
+  .node.b { stroke: var(--branch); }
+  .node.d { stroke: var(--develop); }
+  .node.fill-m { fill: var(--primary); stroke: var(--primary); }
+  .node.dashed { stroke-dasharray: 3 3; stroke: var(--primary); }
+  .tag { fill: var(--primary-soft); stroke: var(--primary); stroke-width: 1; }
+  .tag-t { font-size: 10px; fill: var(--primary); font-weight: 600; }
+  .bracket { fill: none; stroke: var(--ink-2); stroke-width: 1.5; stroke-dasharray: 4 4; }
+  .deploybox { fill: var(--ok-soft); stroke: var(--ok); stroke-width: 1.5; }
+  .deploy-t { font-size: 11.5px; fill: var(--ok); font-weight: 600; }
+  .editmark { fill: none; stroke: var(--branch); stroke-width: 2; stroke-linecap: round; }
+
+  /* ---------- the idea ---------- */
+  .triad { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+  .triad > div { padding: 16px 20px 16px 0; display: grid; gap: 4px; align-content: start; }
+  .triad > div + div { padding-left: 20px; border-left: 1px solid var(--line); }
+  .triad .k { font-family: var(--mono); font-size: .72rem; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; }
+  .triad h4 { font-size: 1.12rem; font-stretch: 106%; font-weight: 720; line-height: 1.25; }
+  .triad p { font-size: .93rem; }
+  .k.where-retool { color: var(--branch); }
+  .k.where-git { color: var(--develop); }
+  .k.where-main { color: var(--primary); }
+  @media (max-width: 760px) {
+    .triad { grid-template-columns: minmax(0, 1fr); }
+    .triad > div + div { padding-left: 0; border-left: 0; border-top: 1px solid var(--line); }
+  }
+  .grid4 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 32px; }
+  .grid4 > div { padding: 14px 0; border-top: 1px solid var(--line); display: grid; gap: 4px; align-content: start; }
+  .grid4 p { font-size: .94rem; }
+  @media (max-width: 720px) { .grid4 { grid-template-columns: minmax(0, 1fr); } }
+
+  .roles { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); border: 1px solid var(--line); border-radius: 12px; background: var(--paper); }
+  .roles > div { padding: 14px 18px; display: grid; gap: 2px; align-content: start; }
+  .roles > div + div { border-left: 1px solid var(--line); }
+  .roles .k { font-family: var(--mono); font-size: .68rem; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+  .roles h4 { font-size: 1rem; font-weight: 700; }
+  .roles p { font-size: .9rem; }
+  @media (max-width: 760px) {
+    .roles { grid-template-columns: minmax(0, 1fr); }
+    .roles > div + div { border-left: 0; border-top: 1px solid var(--line); }
+  }
+
+  /* ---------- tables ---------- */
+  .table-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 12px; background: var(--paper); }
+  table { border-collapse: collapse; width: 100%; font-size: .93rem; }
+  th, td { text-align: left; vertical-align: top; padding: 11px 16px; border-bottom: 1px solid var(--line); }
+  tr:last-child td { border-bottom: 0; }
+  th { font-family: var(--mono); font-size: .7rem; font-weight: 600; letter-spacing: .07em; text-transform: uppercase; color: var(--muted); background: var(--panel); }
+  td:first-child { color: var(--ink); }
+  .t-map td:first-child { font-family: var(--mono); font-size: .84rem; white-space: nowrap; }
+  .t-map td:nth-child(2) { min-width: 230px; }
+  .t-map td:nth-child(3) { min-width: 200px; color: var(--ink-2); }
+  .t-trouble td { min-width: 180px; }
+
+  /* ---------- two-up cards ---------- */
+  .two { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+  @media (max-width: 820px) { .two { grid-template-columns: minmax(0, 1fr); } }
+  .card { background: var(--paper); border: 1px solid var(--line); border-radius: 12px; padding: 20px; display: grid; gap: 12px; align-content: start; min-width: 0; }
+  .card h4 { font-size: 1.12rem; font-stretch: 106%; font-weight: 720; line-height: 1.25; }
+  .tagline { font-family: var(--mono); font-size: .7rem; font-weight: 600; letter-spacing: .07em; text-transform: uppercase; color: var(--muted); }
+  .card p, .card li { font-size: .94rem; }
+  .card ul { display: grid; gap: 4px; }
+  .mini { background: var(--ground); border-radius: 8px; padding: 8px; overflow-x: auto; }
+  .mini svg { display: block; width: 100%; height: auto; min-width: 300px; }
+  .fitcost { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr); gap: 14px; }
+  @media (max-width: 520px) { .fitcost { grid-template-columns: minmax(0,1fr); } }
+  .fitcost .k { font-family: var(--mono); font-size: .68rem; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; }
+  .fitcost .k.fit { color: var(--ok); }
+  .fitcost .k.cost { color: var(--warn); }
+
+  .ledger { list-style: none; padding: 0; display: grid; gap: 8px; }
+  .ledger li { position: relative; padding-left: 24px; font-size: .94rem; }
+  .ledger li::before { content: ""; position: absolute; left: 2px; top: .5em; width: 10px; height: 10px; border-radius: 3px; }
+  .ledger.in li::before { background: var(--ok); }
+  .ledger.out li::before { background: var(--bad); border-radius: 50%; }
+
+  /* ---------- the loop stepper ---------- */
+  .loop { background: var(--paper); border: 1px solid var(--line); border-radius: 14px; overflow: hidden; }
+  .steps { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); border-bottom: 1px solid var(--line); background: var(--panel); }
+  .step-btn {
+    appearance: none; border: 0; background: transparent; cursor: pointer;
+    padding: 12px 10px; text-align: left; display: grid; gap: 2px;
+    font: inherit; color: var(--muted); border-right: 1px solid var(--line);
+  }
+  .step-btn:last-child { border-right: 0; }
+  .step-btn .n { font-family: var(--mono); font-size: .7rem; font-weight: 600; letter-spacing: .06em; }
+  .step-btn .l { font-size: .9rem; font-weight: 650; font-stretch: 104%; line-height: 1.2; }
+  .step-btn:hover { color: var(--ink); background: var(--paper); }
+  .step-btn.done { color: var(--ink-2); }
+  .step-btn[aria-selected="true"] { background: var(--primary); color: var(--primary-ink); }
+  .step-btn:focus-visible { outline-offset: -3px; }
+  @media (max-width: 760px) {
+    .steps { display: flex; overflow-x: auto; }
+    .step-btn { flex: 0 0 auto; min-width: 104px; }
+  }
+  .loop-body { display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr); }
+  .loop-graph { padding: 20px; border-right: 1px solid var(--line); display: grid; align-content: center; min-width: 0; }
+  .loop-graph .scroll-x svg { min-width: 480px; }
+  @media (max-width: 1000px) {
+    .loop-body { grid-template-columns: minmax(0, 1fr); }
+    .loop-graph { border-right: 0; border-bottom: 1px solid var(--line); }
+  }
+  .gs { transition: opacity .35s ease; }
+  .gs.future { opacity: .13; }
+  .gs .halo { fill: var(--primary-soft); opacity: 0; transition: opacity .35s ease; }
+  .gs.current .halo { opacity: 1; }
+  .gs.current .g-lab { fill: var(--ink); font-weight: 600; }
+  .g-lab { font-size: 11px; fill: var(--muted); }
+
+  .step-panel { padding: 22px 24px 24px; display: grid; gap: 16px; align-content: start; }
+  .step-panel header { display: grid; gap: 4px; }
+  .step-panel h4 { font-size: 1.4rem; font-stretch: 110%; font-weight: 760; line-height: 1.15; }
+  .step-panel .when { font-family: var(--mono); font-size: .72rem; letter-spacing: .06em; text-transform: uppercase; color: var(--primary); }
+  .kv { display: grid; gap: 14px; }
+  .kv > div { display: grid; gap: 4px; }
+  .kv .k { font-family: var(--mono); font-size: .68rem; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+  .kv .k.warn { color: var(--warn); }
+  .kv .k.tip { color: var(--ok); }
+  .kv p { font-size: .95rem; line-height: 1.6; }
+  .loop-nav { display: flex; align-items: center; gap: 10px; padding: 12px 24px; border-top: 1px solid var(--line); background: var(--panel); }
+  .loop-nav .count { font-family: var(--mono); font-size: .74rem; color: var(--muted); margin-right: auto; }
+  .btn {
+    appearance: none; font: inherit; font-size: .88rem; font-weight: 600; cursor: pointer;
+    border: 1px solid var(--line-strong); background: var(--paper); color: var(--ink);
+    border-radius: 8px; padding: .45rem .9rem;
+  }
+  .btn:hover:not(:disabled) { border-color: var(--ink); }
+  .btn.primary { background: var(--primary); border-color: var(--primary); color: var(--primary-ink); }
+  .btn:disabled { opacity: .4; cursor: default; }
+
+  /* ---------- repo explorer ---------- */
+  .explorer { display: grid; grid-template-columns: 240px minmax(0, 1fr); background: var(--paper); border: 1px solid var(--line); border-radius: 14px; overflow: hidden; }
+  .tree { background: var(--panel); padding: 14px 10px; border-right: 1px solid var(--line); font-family: var(--mono); font-size: .8rem; display: grid; gap: 1px; align-content: start; }
+  .tree .dir { color: var(--muted); padding: 5px 8px; }
+  .tree .ind1 { padding-left: 22px; }
+  .tree .ind2 { padding-left: 36px; }
+  .file {
+    appearance: none; border: 0; background: transparent; text-align: left; cursor: pointer;
+    font: inherit; color: var(--ink-2); padding: 5px 8px; border-radius: 6px;
+    display: flex; align-items: center; gap: 8px; min-width: 0;
+  }
+  .file span.name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .file:hover { background: var(--paper); color: var(--ink); }
+  .file[aria-selected="true"] { background: var(--ink); color: var(--ground); }
+  .dot { width: 7px; height: 7px; border-radius: 50%; flex: 0 0 auto; display: inline-block; }
+  .dot.safe { background: var(--ok); }
+  .dot.conflict { background: var(--warn); }
+  .dot.never { background: var(--bad); }
+  .file-panel { padding: 22px 24px; display: grid; gap: 14px; align-content: start; min-width: 0; }
+  .file-panel h4 { font-family: var(--mono); font-size: 1rem; font-weight: 600; overflow-wrap: anywhere; }
+  .verdict { justify-self: start; font-family: var(--mono); font-size: .72rem; font-weight: 600; letter-spacing: .04em; padding: .25rem .6rem; border-radius: 6px; display: inline-flex; align-items: center; gap: 8px; }
+  .verdict.safe { background: var(--ok-soft); color: var(--ok); }
+  .verdict.conflict { background: var(--warn-soft); color: var(--warn); }
+  .verdict.never { background: var(--bad-soft); color: var(--bad); }
+  .legend { display: flex; flex-wrap: wrap; gap: 6px 16px; font-family: var(--mono); font-size: .72rem; color: var(--muted); padding: 10px 14px; border-top: 1px solid var(--line); grid-column: 1 / -1; }
+  .legend span { display: inline-flex; align-items: center; gap: 6px; }
+  @media (max-width: 760px) {
+    .explorer { grid-template-columns: minmax(0, 1fr); }
+    .tree { border-right: 0; border-bottom: 1px solid var(--line); }
+  }
+  pre { margin: 0; background: var(--code-bg); border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px; overflow-x: auto; font-family: var(--mono); font-size: .8rem; line-height: 1.6; color: var(--ink); }
+  pre code { background: none; padding: 0; font-size: inherit; overflow-wrap: normal; }
+  .code-cap { font-family: var(--mono); font-size: .68rem; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+  .tk-tag { color: var(--tok-tag); }
+  .tk-attr { color: var(--tok-attr); }
+  .tk-str { color: var(--tok-str); }
+  .tk-kw { color: var(--tok-kw); }
+  .tk-com { color: var(--tok-com); font-style: italic; }
+
+  /* setup steps (a real sequence) */
+  .seq { list-style: none; padding: 0; counter-reset: seq; display: grid; }
+  .seq > li { counter-increment: seq; display: grid; grid-template-columns: 40px minmax(0, 1fr); gap: 4px 12px; padding: 14px 0; border-top: 1px solid var(--line); }
+  .seq > li:first-child { border-top: 0; padding-top: 0; }
+  .seq > li::before { content: counter(seq, decimal-leading-zero); font-family: var(--mono); font-size: .8rem; font-weight: 600; color: var(--primary); padding-top: .15rem; }
+  .seq > li > div { display: grid; gap: 6px; min-width: 0; }
+  .substeps { margin: 0; padding-left: 1.3rem; display: grid; gap: 8px; font-size: .95rem; }
+  .substeps > li { padding-left: .2rem; }
+  .substeps > li::marker { font-family: var(--mono); font-size: .8rem; font-weight: 600; color: var(--muted); }
+  .substeps .paths { list-style: none; padding: 0; margin-top: 4px; display: grid; gap: 2px; font-size: .92rem; }
+  .t-fields td:first-child { white-space: nowrap; }
+  .t-fields td { font-size: .9rem; }
+  .collect { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 2px; }
+  .collect span { font-family: var(--mono); font-size: .76rem; color: var(--ink); background: var(--paper); border: 1px solid var(--line-strong); border-radius: 6px; padding: .2rem .55rem; }
+  .optional { font-family: var(--mono); font-size: .64rem; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); border: 1px solid var(--line-strong); border-radius: 4px; padding: .02rem .32rem; margin-left: .3rem; vertical-align: .12em; }
+
+  /* checklist */
+  .checks { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+  @media (max-width: 820px) { .checks { grid-template-columns: minmax(0, 1fr); } }
+  .checklist { list-style: none; padding: 0; display: grid; gap: 2px; }
+  .checklist label { display: grid; grid-template-columns: 22px minmax(0, 1fr); gap: 10px; padding: 8px 6px; border-radius: 8px; cursor: pointer; font-size: .94rem; line-height: 1.45; }
+  .checklist label:hover { background: var(--panel); }
+  .checklist input { width: 18px; height: 18px; margin: .1rem 0 0; accent-color: var(--primary); }
+  .checklist input:checked + span { color: var(--muted); text-decoration: line-through; text-decoration-color: var(--line-strong); }
+  .check-foot { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+  .check-foot .progress { font-family: var(--mono); font-size: .76rem; color: var(--muted); }
+  .never-list { display: grid; gap: 8px; }
+  .never-list li { font-size: .94rem; }
+  .tagline.bad { color: var(--bad); margin-top: 8px; }
+
+  /* reference search */
+  .search { display: grid; gap: 8px; }
+  .search label { font-family: var(--mono); font-size: .7rem; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+  .search input {
+    font: inherit; font-size: 1rem; color: var(--ink); background: var(--paper);
+    border: 1px solid var(--line-strong); border-radius: 10px; padding: .7rem .9rem; width: 100%; max-width: 520px;
+  }
+  .search input::placeholder { color: var(--muted); }
+  .search input:focus-visible { outline: 2px solid var(--primary); outline-offset: 1px; }
+  .empty { font-size: .92rem; color: var(--muted); }
+
+  .gloss { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 32px; margin: 0; }
+  .gloss > div { padding: 14px 0; border-top: 1px solid var(--line); display: grid; gap: 4px; align-content: start; }
+  .gloss dt { font-weight: 700; color: var(--ink); }
+  .gloss dd { margin: 0; font-size: .93rem; }
+  @media (max-width: 760px) { .gloss { grid-template-columns: minmax(0, 1fr); } }
+  .sources { list-style: none; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 0 24px; font-size: .92rem; }
+  .sources li { padding: 8px 0; border-top: 1px solid var(--line); }
+
+
+  /* ---------- screenshots ---------- */
+  .shots { display: flex; flex-wrap: wrap; gap: 18px 20px; align-items: flex-start; }
+  figure.shot { margin: 0; display: grid; gap: 8px; width: min(100%, var(--w)); }
+  .shot-frame {
+    appearance: none; padding: 0; margin: 0; border: 1px solid var(--line-strong); border-radius: 10px;
+    background: #fff; position: relative; display: block; width: 100%; cursor: zoom-in; overflow: hidden;
+  }
+  .shot-frame img { display: block; width: 100%; height: auto; }
+  .shot-frame:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+  .ring {
+    position: absolute; border: 2.5px solid var(--ring); border-radius: 8px; pointer-events: none;
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--ring) 22%, transparent);
+  }
+  figure.shot figcaption { font-size: .86rem; color: var(--muted); line-height: 1.45; }
+  .loop-shots { border-top: 1px solid var(--line); padding: 20px 24px; background: var(--ground); display: grid; gap: 12px; }
+  .loop-shots .shots-label { font-family: var(--mono); font-size: .68rem; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+  dialog.lightbox { border: 0; padding: 0; background: transparent; max-width: 96vw; max-height: 94vh; overflow: visible; }
+  dialog.lightbox::backdrop { background: rgba(10, 10, 12, .78); }
+  dialog.lightbox img { display: block; max-width: 96vw; max-height: 88vh; width: auto; height: auto; border-radius: 10px; background: #fff; }
+  dialog.lightbox .lb-bar { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding-bottom: 8px; color: #f1f0ea; font-size: .86rem; }
+  dialog.lightbox .lb-close { appearance: none; border: 1px solid rgba(255,255,255,.35); background: rgba(255,255,255,.08); color: #fff; border-radius: 8px; padding: .3rem .7rem; font: inherit; cursor: pointer; }
+
+
+  /* ---------- auto-generated commits ---------- */
+  .commit-mock { list-style: none; padding: 0; margin: 0; border: 1px solid var(--line); border-radius: 10px; overflow: hidden; background: var(--paper); }
+  .commit-mock li { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 2px 12px; padding: 10px 14px; border-top: 1px solid var(--line); align-items: baseline; }
+  .commit-mock li:first-child { border-top: 0; }
+  .commit-mock .msg { color: var(--ink); font-weight: 600; font-size: .92rem; overflow-wrap: anywhere; }
+  .commit-mock .sha { font-family: var(--mono); font-size: .76rem; color: var(--muted); }
+  .commit-mock .meta { grid-column: 1 / -1; font-size: .8rem; color: var(--muted); display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+  .commit-mock .auto-tag { font-family: var(--mono); font-size: .64rem; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); border: 1px solid var(--line-strong); border-radius: 4px; padding: 0 .3rem; }
+  .commit-mock li.bad { background: var(--bad-soft); }
+  .commit-mock li.bad .why { color: var(--bad); font-weight: 600; }
+  .commit-mock li.fix { background: var(--ok-soft); }
+  .commit-mock li.fix .why { color: var(--ok); font-weight: 600; }
+
+  footer.foot { margin-top: 88px; padding-top: 18px; border-top: 1px solid var(--line); display: flex; flex-wrap: wrap; gap: 8px 24px; font-family: var(--mono); font-size: .74rem; color: var(--muted); }
+  footer.foot .wordmark { font-size: .9rem; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="bar">
+    <a class="wordmark" href="#start" aria-label="Stackdrop">
+      <svg viewBox="0 0 18 18" aria-hidden="true"><rect x="2" y="2" width="14" height="4" rx="1" fill="currentColor"/><rect x="2" y="7.5" width="14" height="4" rx="1" fill="currentColor" opacity=".55"/><rect x="2" y="13" width="14" height="3" rx="1" fill="currentColor" opacity=".25"/></svg>
+      Stackdrop
+    </a>
+    <span class="crumb">Retool guides / Source control</span>
+    <span class="ver"><span>Checked against Retool docs, Oct 2026</span></span>
+  </header>
+
+  <div class="hero">
+    <div class="eyebrow">Handbook for builders</div>
+    <h1>Source control in <em>Retool</em></h1>
+    <p class="lede">Once an app is protected, every change goes through a branch, a commit and a pull request before it reaches main. This handbook gets you there in three parts. Read them in order the first time, then come back to part 3 when something looks wrong.</p>
+    <div class="facts">
+      <span class="fact"><b>For</b> builders who know basic Git</span>
+      <span class="fact"><b>Needs</b> Retool Enterprise</span>
+      <span class="fact"><b>Read</b> about 15 minutes in total</span>
+    </div>
+  </div>
+
+  <div class="parts-bar" id="parts-bar">
+    <div class="parts" role="tablist" aria-label="Handbook parts">
+      <button class="part-tab" role="tab" id="ptab-start" aria-controls="start" data-part="start" aria-selected="true">
+        <span class="n">01</span><span class="l">Before you start</span><span class="s">The idea, the words, the setup</span>
+      </button>
+      <button class="part-tab" role="tab" id="ptab-workflow" aria-controls="workflow" data-part="workflow" aria-selected="false" tabindex="-1">
+        <span class="n">02</span><span class="l">Everyday workflow</span><span class="s">From branch to live change</span>
+      </button>
+      <button class="part-tab" role="tab" id="ptab-reference" aria-controls="reference" data-part="reference" aria-selected="false" tabindex="-1">
+        <span class="n">03</span><span class="l">Troubleshooting &amp; glossary</span><span class="s">When something looks wrong</span>
+      </button>
+    </div>
+  </div>
+
+  <main>
+
+  <!-- =================================================================
+       PART 1 · BEFORE YOU START
+       ================================================================= -->
+  <div class="part" id="start" role="tabpanel" aria-labelledby="ptab-start">
+    <div class="part-head">
+      <div class="eyebrow">Part 1 of 3 · about 5 minutes</div>
+      <h2>Before you start</h2>
+      <p>What changes when source control is on, how Git words map to Retool buttons, and how your team is set up.</p>
+      <nav class="jump" aria-label="In this part">
+        <a href="#idea">The idea</a>
+        <a href="#translate">Git words in Retool</a>
+        <a href="#in-git">What goes into Git</a>
+        <a href="#models">How your team branches</a>
+        <a href="#setup">Admin setup</a>
+      </nav>
+    </div>
+
+    <section id="idea">
+      <div class="sec-head"><h3>The idea</h3></div>
+      <div class="triad" aria-label="The whole idea in three lines">
+        <div><span class="k where-retool">Retool</span><h4>is where you make changes</h4><p>On a branch, in the editor you already use.</p></div>
+        <div><span class="k where-git">Git provider</span><h4>is where changes get approved</h4><p>Pull request, review, merge.</p></div>
+        <div><span class="k where-main">main</span><h4>is the source of truth</h4><p>Retool deploys every merge to main.</p></div>
+      </div>
+
+      <figure class="figure">
+        <div class="scroll-x">
+          <svg viewBox="0 0 720 320" role="img" aria-labelledby="mm-t mm-d">
+            <title id="mm-t">How a change moves between Retool and Git</title>
+            <desc id="mm-d">You edit on a branch in Retool and commit. The commit lands on a branch in your Git provider. A pull request is reviewed and merged into main. Retool deploys main back into Retool. There is no direct edit path to main in Retool.</desc>
+            <defs>
+              <marker id="ah" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="s-head"/></marker>
+              <marker id="ahb" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="s-head b"/></marker>
+              <marker id="ahm" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="s-head m"/></marker>
+            </defs>
+            <rect class="s-box" x="12" y="20" width="290" height="286" rx="14"/>
+            <text class="s-title" x="32" y="48">RETOOL</text>
+            <rect class="s-card b" x="34" y="66" width="246" height="76" rx="10"/>
+            <text class="s-h" x="52" y="98">Your branch</text>
+            <text class="s-t muted" x="52" y="120">you build and test here</text>
+            <rect class="s-card m" x="34" y="208" width="246" height="76" rx="10"/>
+            <text class="s-h" x="52" y="240">main  (Protected)</text>
+            <text class="s-t muted" x="52" y="262">locked in the editor</text>
+            <text class="s-t bad" x="157" y="180" text-anchor="middle">&#x2715;  no direct edits to main</text>
+            <rect class="s-box" x="418" y="20" width="290" height="286" rx="14"/>
+            <text class="s-title" x="438" y="48">GIT PROVIDER</text>
+            <rect class="s-card b" x="440" y="66" width="246" height="76" rx="10"/>
+            <text class="s-h" x="458" y="98">feature branch</text>
+            <text class="s-t muted" x="458" y="120">your pushed commits</text>
+            <rect class="s-card m" x="440" y="208" width="246" height="76" rx="10"/>
+            <text class="s-h" x="458" y="240">main</text>
+            <text class="s-t muted" x="458" y="262">the approved version</text>
+            <path class="s-arrow" d="M563,146 V202" marker-end="url(#ah)"/>
+            <text class="s-t" x="575" y="171">pull request</text>
+            <text class="s-t" x="575" y="186">review, merge</text>
+            <path class="s-arrow b" d="M284,104 H434" marker-end="url(#ahb)"/>
+            <text class="s-t b" x="359" y="94" text-anchor="middle">Commit</text>
+            <text class="s-t muted" x="359" y="124" text-anchor="middle">pushes too</text>
+            <path class="s-arrow m" d="M436,246 H286" marker-end="url(#ahm)"/>
+            <text class="s-t m" x="361" y="236" text-anchor="middle">Deploy</text>
+            <text class="s-t muted" x="361" y="266" text-anchor="middle">automatic</text>
+          </svg>
+        </div>
+        <figcaption class="caption">The only way into main is a pull request. Retool opens it for you, and your Git provider decides whether it merges.</figcaption>
+      </figure>
+
+      <div class="grid4">
+        <div><strong>Protected means locked on main.</strong><p>Once an app, workflow, resource, theme or query is protected, its main version can't be edited in Retool. To change it, you create a branch.</p></div>
+        <div><strong>A branch covers your whole instance.</strong><p>On one branch you can edit several apps, modules, workflows and queries. They all go into the same pull request.</p></div>
+        <div><strong>Merging happens in your Git provider.</strong><p>GitHub, GitLab, Bitbucket, Azure Repos or AWS CodeCommit. Never inside Retool.</p></div>
+        <div><strong>Deploys are automatic.</strong><p>Retool watches main and syncs whatever changed. Self-hosted instances check every 10 seconds.</p></div>
+      </div>
+
+      <div class="shots"><figure class="shot" style="--w:899px"><button class="shot-frame" type="button" aria-label="Enlarge screenshot: Apps list row showing order-search with a Protected badge"><img src="img/s01-protected-badge.png" width="1798" height="156" alt="Apps list row showing order-search with a Protected badge" loading="lazy"><span class="ring" style="left:16.54%;top:61.48%;width:7.76%;height:26.67%"></span></button><figcaption>A protected app shows the <strong>Protected</strong> badge in the apps list.</figcaption></figure></div>
+
+      <div class="roles">
+        <div><span class="k">Once</span><h4>Admin</h4><p>Connects Git and picks the settings.</p></div>
+        <div><span class="k">Every change</span><h4>Builder</h4><p>Branches, commits, opens pull requests.</p></div>
+        <div><span class="k">Every pull request</span><h4>Reviewer</h4><p>Reviews and merges in the Git provider.</p></div>
+      </div>
+    </section>
+
+    <section id="translate">
+      <div class="sec-head"><h3>Git words, Retool buttons</h3></div>
+      <p>You already know the Git verbs. This is where each one lives in Retool. Labels in <span class="ui">boxes</span> are what you'll see on screen.</p>
+      <div class="table-wrap">
+        <table class="t-map">
+          <thead><tr><th>In Git</th><th>In Retool</th><th>Good to know</th></tr></thead>
+          <tbody>
+            <tr><td>add to repo</td><td><span class="ui">&middot;&middot;&middot;</span> menu, <span class="ui">Protect app</span></td><td>Once per app.</td></tr>
+            <tr><td>git switch -c</td><td><span class="ui">Edit</span>, <span class="ui">Create new branch</span></td><td>Always from main.</td></tr>
+            <tr><td>git switch</td><td>Branch name, bottom-left status bar</td><td>New tabs open on main.</td></tr>
+            <tr><td>git diff</td><td><span class="ui">Review changes</span></td><td>Inside the commit dialog.</td></tr>
+            <tr><td>git commit + push</td><td><span class="ui">Commit</span>, <span class="ui">Commit to &lt;branch&gt;</span></td><td>One step. No separate push.</td></tr>
+            <tr><td>open a PR</td><td>Branch menu, <span class="ui">Create pull request</span></td><td>Finishes in your Git provider.</td></tr>
+            <tr><td>merge</td><td>Not in Retool</td><td>Your Git provider does it.</td></tr>
+            <tr><td>deploy</td><td>Automatic, or <span class="ui">Deploy latest</span></td><td>Admins can force a full sync.</td></tr>
+            <tr><td>pull from main</td><td>Catch-up commits, or <span class="ui">Merge main into &lt;branch&gt;</span></td><td>See <a href="#sync">Keep your branch up to date</a>.</td></tr>
+            <tr><td>git tag</td><td>Releases</td><td>See <a href="#releases">Getting your change live</a>.</td></tr>
+            <tr><td>git branch -d</td><td>Branch menu, delete</td><td>Only the branch owner.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section id="in-git">
+      <div class="sec-head"><h3>What goes into Git</h3></div>
+      <div class="two">
+        <div class="card">
+          <span class="tagline">Goes into Git</span>
+          <ul class="ledger in">
+            <li>Apps built with the new app builder</li>
+            <li>Classic apps and modules</li>
+            <li>Workflows</li>
+            <li>Resources (production environment settings)</li>
+            <li>Themes</li>
+            <li>Query Library queries</li>
+            <li>Agents</li>
+          </ul>
+        </div>
+        <div class="card">
+          <span class="tagline">Stays out of Git</span>
+          <ul class="ledger out">
+            <li>Secrets and passwords. Use configuration variables or a secrets manager.</li>
+            <li>Uploaded images. They stay on the instance where they were uploaded, so host them at a URL.</li>
+            <li>Releases, unless multi-instance releases are on.</li>
+            <li>Non-production resource environments.</li>
+            <li>Anything that isn't protected.</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <section id="models">
+      <div class="sec-head"><h3>How your team branches</h3></div>
+      <p>Teams use one of two models. Ask which one you're on before your first branch.</p>
+      <div class="two">
+        <div class="card">
+          <span class="tagline">Model A · Retool's recommendation</span>
+          <h4>One main, short feature branches</h4>
+          <div class="mini">
+            <svg viewBox="0 0 400 160" role="img" aria-label="Short feature branches merge into a single main; releases are tagged on main">
+              <path class="lane m" d="M16,104 H388"/>
+              <path class="lane b" d="M40,104 C58,104 54,56 72,56 H112 C130,56 126,104 144,104"/>
+              <path class="lane b" d="M162,104 C180,104 176,56 194,56 H222 C240,56 236,104 254,104"/>
+              <path class="lane b" d="M272,104 C290,104 286,56 304,56 H330 C348,56 344,104 362,104"/>
+              <circle class="node m" cx="40" cy="104" r="5"/><circle class="node b" cx="92" cy="56" r="5"/><circle class="node fill-m" cx="144" cy="104" r="6"/>
+              <circle class="node m" cx="162" cy="104" r="5"/><circle class="node b" cx="208" cy="56" r="5"/><circle class="node fill-m" cx="254" cy="104" r="6"/>
+              <circle class="node m" cx="272" cy="104" r="5"/><circle class="node b" cx="317" cy="56" r="5"/><circle class="node fill-m" cx="362" cy="104" r="6"/>
+              <rect class="tag" x="116" y="116" width="56" height="18" rx="4"/><text class="tag-t" x="144" y="129" text-anchor="middle">rel 14</text>
+              <rect class="tag" x="334" y="116" width="56" height="18" rx="4"/><text class="tag-t" x="362" y="129" text-anchor="middle">rel 15</text>
+              <text class="s-t b" x="40" y="34">feature branches, days not weeks</text>
+              <text class="s-t m" x="16" y="152">main, read by every instance</text>
+            </svg>
+          </div>
+          <p>Every instance reads the same protected main. Branches live a week or less. Releases decide what each instance shows.</p>
+          <div class="fitcost">
+            <div><span class="k fit">Good fit</span><p>Most teams.</p></div>
+            <div><span class="k cost">Costs</span><p>Testing before users see a change relies on releases or a staging instance.</p></div>
+          </div>
+        </div>
+        <div class="card">
+          <span class="tagline">Model B · Spaces</span>
+          <h4>A develop branch for a Dev Space</h4>
+          <div class="mini">
+            <svg viewBox="0 0 400 176" role="img" aria-label="Feature branches merge into develop, connected to a Dev Space; develop is promoted to main, connected to the Prod Space, by pull request">
+              <path class="lane m" d="M16,140 H388"/>
+              <path class="lane d" d="M28,140 C44,140 40,96 56,96 H388"/>
+              <path class="lane b" d="M78,96 C94,96 90,48 106,48 H132 C148,48 144,96 160,96"/>
+              <path class="lane b" d="M176,96 C192,96 188,48 204,48 H226 C242,48 238,96 254,96"/>
+              <path class="lane d" d="M270,96 C290,96 284,140 304,140"/>
+              <circle class="node m" cx="28" cy="140" r="5"/>
+              <circle class="node d" cx="78" cy="96" r="5"/><circle class="node b" cx="119" cy="48" r="5"/><circle class="node d" cx="160" cy="96" r="6"/>
+              <circle class="node d" cx="176" cy="96" r="5"/><circle class="node b" cx="215" cy="48" r="5"/><circle class="node d" cx="254" cy="96" r="6"/>
+              <circle class="node fill-m" cx="304" cy="140" r="7"/>
+              <text class="s-t b" x="78" y="28">feature branches</text>
+              <text class="s-t d" x="388" y="86" text-anchor="end">develop · Dev Space</text>
+              <text class="s-t" x="300" y="122" text-anchor="end">PR</text>
+              <text class="s-t m" x="388" y="166" text-anchor="end">main · Prod Space</text>
+            </svg>
+          </div>
+          <p>A Dev Space is connected to a <code>develop</code> branch and a Prod Space to main. Features merge into develop for testing, then a pull request promotes develop to main.</p>
+          <div class="fitcost">
+            <div><span class="k fit">Good fit</span><p>Teams that want a full test environment on one instance.</p></div>
+            <div><span class="k cost">Costs</span><p>More merges and drift. Config variable names must match exactly in both Spaces.</p></div>
+          </div>
+        </div>
+      </div>
+      <div class="note">
+        <span class="note-label">Our take</span>
+        <p>Start with model A. Move to model B when you need a separate test environment on the same instance and someone owns the develop-to-main promotions.</p>
+      </div>
+    </section>
+
+    <section id="setup">
+      <details class="more" id="setup-details">
+        <summary>For admins: connect Git once <span class="hint">Builders can skip this</span></summary>
+        <div class="more-body">
+          <p><strong>You need</strong> a Retool Enterprise plan and admin rights in Retool. On GitHub you need to be able to create an app in the account that owns the repository; for an organization, that means an org owner or a GitHub App manager. These steps use GitHub. Other providers follow the same shape, and their guides are in <a href="#sources">Sources</a>.</p>
+          <div class="note">
+            <span class="note-label">You'll collect five values for Retool</span>
+            <div class="collect"><span>Owner</span><span>Repository name</span><span>App ID</span><span>Installation ID</span><span>Private key (base64)</span></div>
+            <p>Keep a scratch note open and paste each one in as you go.</p>
+          </div>
+          <ol class="seq">
+            <li><div><strong>Create the repository</strong>
+              <p>Create a new private repository in the account or organization that will own it. Tick the option to add a README when you create it; that gives you the <code>README.md</code> and the <code>main</code> branch Retool needs. This repo will hold everything you protect. Note its owner and name.</p>
+            </div></li>
+            <li><div><strong>Register a GitHub App</strong>
+              <p>The GitHub App is how Retool signs in to GitHub. Create it under the <strong>same account that owns the repository</strong>, or Retool won't be able to reach it.</p>
+              <ol class="substeps">
+                <li>Open the GitHub Apps page:
+                  <ul class="paths">
+                    <li><strong>Organization:</strong> profile picture &rsaquo; Your organizations &rsaquo; Settings next to the org &rsaquo; Developer settings &rsaquo; GitHub Apps</li>
+                    <li><strong>Personal account:</strong> profile picture &rsaquo; Settings &rsaquo; Developer settings &rsaquo; GitHub Apps</li>
+                  </ul>
+                </li>
+                <li>Click <span class="ui">New GitHub App</span> and fill in the form as shown below.</li>
+                <li>Click <span class="ui">Create GitHub App</span> at the bottom of the page.</li>
+              </ol>
+              <div class="table-wrap">
+                <table class="t-fields">
+                  <thead><tr><th>Field on GitHub</th><th>Set it to</th></tr></thead>
+                  <tbody>
+                    <tr><td>GitHub App name</td><td>Anything unique on GitHub, up to 34 characters, like <code>acme-retool-source-control</code></td></tr>
+                    <tr><td>Homepage URL</td><td>Any valid URL, such as your Retool address. GitHub requires it; Retool doesn't use it.</td></tr>
+                    <tr><td>Callback URL</td><td>Leave empty</td></tr>
+                    <tr><td>Expire user authorization tokens</td><td>Unticked</td></tr>
+                    <tr><td>Request user authorization (OAuth) during installation</td><td>Unticked</td></tr>
+                    <tr><td>Webhook &rsaquo; Active</td><td>Unticked</td></tr>
+                    <tr><td>Repository permissions &rsaquo; Contents</td><td><code>Read and write</code></td></tr>
+                    <tr><td>Repository permissions &rsaquo; Pull requests</td><td><code>Read and write</code></td></tr>
+                    <tr><td>All other permissions</td><td>No access. GitHub adds <code>Metadata: Read-only</code> by itself.</td></tr>
+                    <tr><td>Where can this GitHub App be installed?</td><td>Only on this account</td></tr>
+                  </tbody>
+                </table>
+              </div>
+              <p class="caption"><a class="src" href="https://docs.github.com/en/apps/creating-github-apps/registering-a-github-app/registering-a-github-app">GitHub docs</a> <a class="src" href="https://docs.retool.com/source-control/tutorials/github">Retool docs</a></p>
+            </div></li>
+            <li><div><strong>Copy the App ID and generate a private key</strong>
+              <ol class="substeps">
+                <li>After you create the app, GitHub opens its settings page. Under <strong>About</strong>, copy the <strong>App ID</strong>. It's a number; don't confuse it with the Client ID. The <strong>Owned by</strong> name on the same page is the owner you'll give Retool.</li>
+                <li>Scroll down to <strong>Private keys</strong> and click <span class="ui">Generate a private key</span>. A <code>.pem</code> file downloads. GitHub only keeps the public half, so store this file somewhere safe. If you lose it, generate a new one.</li>
+                <li>Retool wants the key base64-encoded. Run this in a terminal, then open the text file and copy everything in it:</li>
+              </ol>
+<pre><code><span class="tk-com"># macOS</span>
+base64 -i ~/Downloads/acme-retool-source-control.2026-10-05.private-key.pem &gt; github-private-key.txt
+<span class="tk-com"># Linux</span>
+base64 -w 0 ~/Downloads/acme-retool-source-control.2026-10-05.private-key.pem &gt; github-private-key.txt</code></pre>
+              <p class="caption">Your file name will differ; it starts with your app's name and the date. If you store the key in Kubernetes Secrets, Retool says to encode it twice. <a class="src" href="https://docs.github.com/en/apps/creating-github-apps/authenticating-with-a-github-app/managing-private-keys-for-github-apps">GitHub docs</a></p>
+            </div></li>
+            <li><div><strong>Install the app on your repository</strong>
+              <ol class="substeps">
+                <li>On the app's settings page, click <span class="ui">Install App</span> in the left sidebar.</li>
+                <li>Click <span class="ui">Install</span> next to the account or organization that owns the repo.</li>
+                <li>Choose <span class="ui">Only select repositories</span>, pick your Retool repository, and click <span class="ui">Install</span>.</li>
+                <li>Copy the <strong>Installation ID</strong>. It's the number at the end of the URL you land on:</li>
+              </ol>
+<pre><code><span class="tk-com"># organization</span>
+https://github.com/organizations/acme/settings/installations/<span class="tk-kw">12345678</span>
+<span class="tk-com"># personal account</span>
+https://github.com/settings/installations/<span class="tk-kw">12345678</span></code></pre>
+              <p class="caption">Lost it? Open the installed app again with <span class="ui">Configure</span> from your account or organization settings, and the same URL appears. <a class="src" href="https://docs.github.com/en/apps/maintaining-github-apps/installing-github-apps">GitHub docs</a></p>
+            </div></li>
+            <li><div><strong>Connect Retool</strong>
+              <ol class="substeps">
+                <li>In Retool, go to <span class="ui">Settings &rsaquo; Source control</span> and choose <span class="ui">Set up GitHub</span>.</li>
+                <li>Fill in the form with the values you collected:</li>
+              </ol>
+              <div class="table-wrap">
+                <table class="t-fields">
+                  <thead><tr><th>Field in Retool</th><th>What to enter</th></tr></thead>
+                  <tbody>
+                    <tr><td>GitHub owner</td><td>The <strong>Owned by</strong> name from step 3, your organization or username</td></tr>
+                    <tr><td>GitHub repository</td><td>The repository name only, not the full URL</td></tr>
+                    <tr><td>GitHub branch</td><td><code>main</code></td></tr>
+                    <tr><td>App ID</td><td>From step 3</td></tr>
+                    <tr><td>Installation ID</td><td>From step 4</td></tr>
+                    <tr><td>App Private Key</td><td>The base64 text from step 3</td></tr>
+                    <tr><td>GitHub Enterprise URL and API URL</td><td>Only for self-hosted GitHub Enterprise Server. Otherwise leave empty.</td></tr>
+                  </tbody>
+                </table>
+              </div>
+              <ol class="substeps" start="3">
+                <li>Click <span class="ui">Test connection</span>. If it fails, recheck the owner, repository name and Installation ID first; those cause most failures.</li>
+                <li>Click <span class="ui">Save and deploy</span>.</li>
+              </ol>
+            </div></li>
+            <li><div><strong>Protect main in GitHub</strong><p>Add a branch protection rule that requires a review before merging.</p></div></li>
+            <li><div><strong>Move environment-specific values into configuration variables</strong>
+              <p><strong>Why:</strong> when you protect an app or resource, Retool copies it into Git, and that same copy is deployed to every instance or Space that reads from the repo. A staging URL, database host or API key typed straight into a query or resource goes into Git with it, and then lands on production too.</p>
+              <p>A configuration variable keeps that value out of the app. The app only stores a name, such as <code>API_BASE_URL</code>, and each instance or Space sets its own value for that name in its settings. You get one app in Git, with the right value on every instance.</p>
+<pre><code><span class="tk-com"># Before: hardcoded, so this exact URL deploys everywhere</span>
+https://staging-api.example.com/orders
+
+<span class="tk-com"># After: Git only holds the name</span>
+{{ environment.variables.API_BASE_URL }}/orders
+<span class="tk-com">#   dev instance:  https://staging-api.example.com</span>
+<span class="tk-com">#   prod instance: https://api.example.com</span></code></pre>
+              <p><strong>Do it before protecting,</strong> because anything already committed stays in Git history. In resources, write <code>{{ environment.variables.NAME }}</code>. In apps and workflows, write <code>{{ retoolContext.configVars.NAME }}</code>. Use exactly the same name on every instance and Space, capitals included.</p>
+            </div></li>
+            <li><div><strong>Add a test deployment check <span class="optional">Optional</span></strong><p>A CI step that sends the pull request's commit SHA to <code>POST /api/v2/source_control/test_deploy</code>, using a Retool API token with the Source Control <code>Read</code> and <code>Test Deploy</code> scopes. <a class="src" href="https://docs.retool.com/source-control/guides/test-deploy">Retool docs</a></p></div></li>
+          </ol>
+          <div class="note">
+            <span class="note-label">Also worth doing</span>
+            <p>Keep Source Control settings to a few admins, since they hold your Git credentials. On self-hosted, <code>VERSION_CONTROL_LOCKED</code> makes an instance read-only, which suits a production instance that should only receive deploys.</p>
+          </div>
+        </div>
+      </details>
+    </section>
+
+    <div class="part-foot">
+      <button class="btn primary next" type="button" data-go="workflow"><small>Next</small>Everyday workflow &rarr;</button>
+    </div>
+  </div>
+
+  <!-- =================================================================
+       PART 2 · EVERYDAY WORKFLOW
+       ================================================================= -->
+  <div class="part" id="workflow" role="tabpanel" aria-labelledby="ptab-workflow" hidden>
+    <div class="part-head">
+      <div class="eyebrow">Part 2 of 3 · about 8 minutes</div>
+      <h2>Everyday workflow</h2>
+      <p>The loop you'll repeat for every change, and what it takes to get that change in front of users.</p>
+      <nav class="jump" aria-label="In this part">
+        <a href="#loop">The change loop</a>
+        <a href="#sync">Keep your branch up to date</a>
+        <a href="#auto-commits">Retool&rsquo;s own commits</a>
+        <a href="#releases">Getting your change live</a>
+        <a href="#repo">Reviewing a pull request</a>
+        <a href="#rules">Checklist</a>
+      </nav>
+    </div>
+
+    <section id="loop">
+      <div class="sec-head"><h3>The change loop</h3></div>
+      <p>Step 1 happens once per app. Steps 2 to 7 happen for every change. Click through them.</p>
+
+      <div class="loop">
+        <div class="steps" role="tablist" aria-label="Steps of the change loop">
+          <button class="step-btn" role="tab" id="tab-1" aria-controls="step-1" data-step="1" aria-selected="true"><span class="n">01</span><span class="l">Protect</span></button>
+          <button class="step-btn" role="tab" id="tab-2" aria-controls="step-2" data-step="2" aria-selected="false" tabindex="-1"><span class="n">02</span><span class="l">Branch</span></button>
+          <button class="step-btn" role="tab" id="tab-3" aria-controls="step-3" data-step="3" aria-selected="false" tabindex="-1"><span class="n">03</span><span class="l">Build</span></button>
+          <button class="step-btn" role="tab" id="tab-4" aria-controls="step-4" data-step="4" aria-selected="false" tabindex="-1"><span class="n">04</span><span class="l">Commit</span></button>
+          <button class="step-btn" role="tab" id="tab-5" aria-controls="step-5" data-step="5" aria-selected="false" tabindex="-1"><span class="n">05</span><span class="l">Pull request</span></button>
+          <button class="step-btn" role="tab" id="tab-6" aria-controls="step-6" data-step="6" aria-selected="false" tabindex="-1"><span class="n">06</span><span class="l">Review + merge</span></button>
+          <button class="step-btn" role="tab" id="tab-7" aria-controls="step-7" data-step="7" aria-selected="false" tabindex="-1"><span class="n">07</span><span class="l">Deploy</span></button>
+        </div>
+
+        <div class="loop-body">
+          <div class="loop-graph">
+            <div class="scroll-x">
+              <svg id="loop-graph" viewBox="0 0 560 270" role="img" aria-labelledby="lg-t">
+                <title id="lg-t">Git graph of one change: protect, branch, build, commit, pull request, merge, deploy</title>
+                <g class="gs" data-step="1">
+                  <path class="lane m" d="M20,170 H540"/>
+                  <circle class="halo" cx="56" cy="170" r="16"/>
+                  <circle class="node fill-m" cx="56" cy="170" r="7"/>
+                  <text class="g-lab" x="20" y="150">main</text>
+                  <text class="g-lab" x="56" y="198" text-anchor="middle">app protected</text>
+                </g>
+                <g class="gs" data-step="2">
+                  <circle class="halo" cx="150" cy="80" r="16"/>
+                  <path class="lane b" d="M112,170 C140,170 132,80 160,80 H400"/>
+                  <circle class="node m" cx="112" cy="170" r="6"/>
+                  <text class="g-lab" x="150" y="112">feature/order-search</text>
+                </g>
+                <g class="gs" data-step="3">
+                  <rect class="halo" x="178" y="34" width="70" height="36" rx="8"/>
+                  <path class="editmark" d="M186,60 l8,-12 l8,12 l8,-12 l8,12 l8,-12 l8,12"/>
+                  <text class="g-lab" x="213" y="28" text-anchor="middle">edits</text>
+                </g>
+                <g class="gs" data-step="4">
+                  <circle class="halo" cx="280" cy="80" r="16"/>
+                  <circle class="halo" cx="350" cy="80" r="16"/>
+                  <circle class="node b" cx="280" cy="80" r="7"/>
+                  <circle class="node b" cx="350" cy="80" r="7"/>
+                  <text class="g-lab" x="315" y="112" text-anchor="middle">2 commits</text>
+                </g>
+                <g class="gs" data-step="5">
+                  <rect class="bracket" x="262" y="56" width="108" height="48" rx="10"/>
+                  <text class="g-lab" x="316" y="44" text-anchor="middle">pull request &#x2192; main</text>
+                </g>
+                <g class="gs" data-step="6">
+                  <path class="lane b" d="M400,80 C428,80 420,170 448,170"/>
+                  <circle class="halo" cx="448" cy="170" r="16"/>
+                  <circle class="node fill-m" cx="448" cy="170" r="8"/>
+                  <text class="g-lab" x="448" y="148" text-anchor="middle">merged</text>
+                </g>
+                <g class="gs" data-step="7">
+                  <path class="s-arrow m dash" d="M448,180 V210"/>
+                  <rect class="deploybox" x="378" y="214" width="162" height="40" rx="8"/>
+                  <text class="deploy-t" x="459" y="239" text-anchor="middle">Retool deploys main</text>
+                </g>
+              </svg>
+            </div>
+          </div>
+
+          <div class="panels">
+            <article class="step-panel" id="step-1" role="tabpanel" aria-labelledby="tab-1" data-step="1">
+              <header><span class="when">Once per app</span><h4>Protect the app</h4></header>
+              <div class="kv">
+                <div><span class="k">You click</span><p>In the apps list, open the app's <span class="ui">&middot;&middot;&middot;</span> menu and choose <span class="ui">Protect app</span>, then follow the prompts to open the pull request it creates. Workflows have <span class="ui">Protect workflow</span> in the same place.</p></div>
+                <div><span class="k">In Git</span><p>Merge that pull request in GitHub. The app gets its own folder on main, Retool shows <span class="ui">Protection complete</span>, and the app gets the <span class="ui">Protected</span> badge.</p></div>
+                <div><span class="k warn">Watch out</span><p>Swap hardcoded URLs and other environment-specific values for configuration variables first, so nothing instance-specific ends up in Git.</p></div>
+              </div>
+            </article>
+            <article class="step-panel" id="step-2" role="tabpanel" aria-labelledby="tab-2" data-step="2" hidden>
+              <header><span class="when">Every change</span><h4>Create a branch</h4></header>
+              <div class="kv">
+                <div><span class="k">You click</span><p>On the protected app, <span class="ui">Edit</span>, then <span class="ui">Create new branch</span>. Retool suggests a name like <code>yourname/patch-1a2b</code>; replace it with one that says what the change is, like <code>feature/order-search</code>. Tick <span class="ui">Allow collaborators</span> if teammates need to commit to it too.</p></div>
+                <div><span class="k">In Git</span><p>Nothing yet. Retool creates the branch from main, and it appears in GitHub after your first commit.</p></div>
+                <div><span class="k warn">Watch out</span><p>A new browser tab always opens on main. Check the branch name in the bottom-left status bar before you edit.</p></div>
+              </div>
+            </article>
+            <article class="step-panel" id="step-3" role="tabpanel" aria-labelledby="tab-3" data-step="3" hidden>
+              <header><span class="when">Every change</span><h4>Build on your branch</h4></header>
+              <div class="kv">
+                <div><span class="k">You click</span><p>Nothing new. Build the way you normally do. Users keep running main.</p></div>
+                <div><span class="k">In Git</span><p>Nothing yet. Your edits reach Git when you commit.</p></div>
+                <div><span class="k tip">Tip</span><p>You can edit other apps, modules, workflows and queries on the same branch. They join the same pull request.</p></div>
+                <div><span class="k warn">Watch out</span><p>Two builders editing the same component on separate branches will conflict. Split work by page, by module, or by queries versus UI.</p></div>
+              </div>
+            </article>
+            <article class="step-panel" id="step-4" role="tabpanel" aria-labelledby="tab-4" data-step="4" hidden>
+              <header><span class="when">Every change, often</span><h4>Commit</h4></header>
+              <div class="kv">
+                <div><span class="k">You click</span><p><span class="ui">Commit</span> in the top right opens <strong>Commit to branch</strong>. Write a message and press <span class="ui">Commit to &lt;your-branch&gt;</span>. <span class="ui">Review changes</span> shows the diff first, with a <span class="ui">Past commits</span> tab for what's already on the branch.</p></div>
+                <div><span class="k">In Git</span><p>Commit and push happen together. The commit is on the remote branch straight away.</p></div>
+                <div><span class="k tip">Tip</span><p>Commit small and often, with messages that say what changed. Small commits are easy to review and easy to cherry-pick.</p></div>
+              </div>
+            </article>
+            <article class="step-panel" id="step-5" role="tabpanel" aria-labelledby="tab-5" data-step="5" hidden>
+              <header><span class="when">When the change is ready</span><h4>Open a pull request</h4></header>
+              <div class="kv">
+                <div><span class="k">You click</span><p>Click the branch name in the bottom-left status bar, then <span class="ui">Create pull request</span>. Check the list of dependencies, then <span class="ui">Open pull request</span>.</p></div>
+                <div><span class="k">In Git</span><p>A normal pull request into main, made of Toolscript files. See <a href="#repo">Reviewing a pull request</a>.</p></div>
+                <div><span class="k warn">Watch out</span><p>The same panel lists the apps on your branch. Anything marked <span class="ui">Not committed</span> isn't in Git yet, so commit it first. If your change relies on a module, resource or query that also changed, keep it on the same branch or merge that one first.</p></div>
+              </div>
+            </article>
+            <article class="step-panel" id="step-6" role="tabpanel" aria-labelledby="tab-6" data-step="6" hidden>
+              <header><span class="when">In your Git provider</span><h4>Review and merge</h4></header>
+              <div class="kv">
+                <div><span class="k">You click</span><p>Nothing in Retool. A reviewer approves and merges in your Git provider.</p></div>
+                <div><span class="k">In Git</span><p>Your branch merges into main with your usual merge strategy.</p></div>
+                <div><span class="k tip">Just before you merge</span><p>Check the pull request for Retool-generated commits that undo someone else&rsquo;s work, and revert them. See <a href="#auto-commits">Check Retool&rsquo;s own commits</a>.</p></div>
+                <div><span class="k warn">Watch out</span><p>Never force-push, rebase or reset main. Retool tracks commit history and gets stuck on commits that no longer exist.</p></div>
+              </div>
+            </article>
+            <article class="step-panel" id="step-7" role="tabpanel" aria-labelledby="tab-7" data-step="7" hidden>
+              <header><span class="when">Seconds after the merge</span><h4>Retool deploys</h4></header>
+              <div class="kv">
+                <div><span class="k">You click</span><p>Usually nothing. Admins can confirm it in the Deployment Dashboard under <span class="ui">Settings &rsaquo; Source control</span>, or press <span class="ui">Deploy latest</span> for a full sync.</p></div>
+                <div><span class="k">In Retool</span><p>Retool deploys what changed. If a deploy fails, the app keeps running its last good version.</p></div>
+                <div><span class="k warn">Watch out</span><p>If the app or workflow uses releases, publish one now. See <a href="#releases">Getting your change live</a>. Then delete the branch; work added after a merge tends to get lost.</p></div>
+              </div>
+            </article>
+          </div>
+        </div>
+        <div class="loop-shots" id="loop-shots">
+          <span class="shots-label">In Retool</span>
+          <div class="shots"><figure class="shot" data-step="1" style="--w:1000px"><button class="shot-frame" type="button" aria-label="Enlarge screenshot: The app menu in the apps list, with Protect app near the bottom"><img src="img/s02-protect-menu.png" width="2000" height="834" alt="The app menu in the apps list, with Protect app near the bottom" loading="lazy"><span class="ring" style="left:83.08%;top:83.62%;width:16.74%;height:6.11%"></span></button><figcaption>Open the app&rsquo;s <span class="ui">&middot;&middot;&middot;</span> menu in the apps list and choose <span class="ui">Protect app</span>.</figcaption></figure><figure class="shot" data-step="1" style="--w:480px"><button class="shot-frame" type="button" aria-label="Enlarge screenshot: Protection complete dialog confirming the pull request was merged"><img src="img/s03-protection-complete.png" width="961" height="577" alt="Protection complete dialog confirming the pull request was merged" loading="lazy"><span class="ring" style="left:84.65%;top:82.95%;width:11.42%;height:10.82%"></span></button><figcaption>Once the protect pull request is merged in GitHub, Retool confirms it.</figcaption></figure><figure class="shot" data-step="2" style="--w:972px"><button class="shot-frame" type="button" aria-label="Enlarge screenshot: The Edit button on a protected app, open to Create new branch"><img src="img/s04-edit-menu.png" width="1944" height="315" alt="The Edit button on a protected app, open to Create new branch" loading="lazy"><span class="ring" style="left:73.92%;top:50.79%;width:25.87%;height:16.51%"></span></button><figcaption>On a protected app, <span class="ui">Edit</span> opens the branch menu.</figcaption></figure><figure class="shot" data-step="2" style="--w:559px"><button class="shot-frame" type="button" aria-label="Enlarge screenshot: Create branch dialog with the name feature/order-search and Allow collaborators ticked"><img src="img/s05-create-branch.png" width="1119" height="647" alt="Create branch dialog with the name feature/order-search and Allow collaborators ticked" loading="lazy"><span class="ring" style="left:2.53%;top:47.66%;width:94.76%;height:9.36%"></span><span class="ring" style="left:1.86%;top:62.87%;width:26.01%;height:8.77%"></span></button><figcaption>Name the branch after the change. Tick <span class="ui">Allow collaborators</span> to let teammates commit to it.</figcaption></figure><figure class="shot" data-step="4" style="--w:335px"><button class="shot-frame" type="button" aria-label="Enlarge screenshot: Commit to branch panel with a message and a Commit to feature/order-search button"><img src="img/s07-commit.png" width="670" height="515" alt="Commit to branch panel with a message and a Commit to feature/order-search button" loading="lazy"><span class="ring" style="left:72.03%;top:1.10%;width:25.42%;height:11.03%"></span><span class="ring" style="left:4.24%;top:66.91%;width:88.42%;height:11.40%"></span></button><figcaption><span class="ui">Commit</span> opens this panel. The commit is pushed to GitHub in the same step.</figcaption></figure><figure class="shot" data-step="4" style="--w:1000px"><button class="shot-frame" type="button" aria-label="Enlarge screenshot: Review changes dialog showing a Toolscript diff and past commits"><img src="img/s08-review-changes.png" width="2000" height="1061" alt="Review changes dialog showing a Toolscript diff and past commits" loading="lazy"><span class="ring" style="left:9.30%;top:1.64%;width:7.63%;height:4.55%"></span></button><figcaption><span class="ui">Review changes</span> shows the diff. <span class="ui">Past commits</span> lists what&rsquo;s already on the branch.</figcaption></figure><figure class="shot" data-step="5" style="--w:529px"><button class="shot-frame" type="button" aria-label="Enlarge screenshot: Branch panel above the status bar, with a Create pull request button"><img src="img/s06-branch-menu.png" width="1059" height="462" alt="Branch panel above the status bar, with a Create pull request button" loading="lazy"><span class="ring" style="left:18.39%;top:31.02%;width:65.71%;height:12.65%"></span><span class="ring" style="left:17.50%;top:88.98%;width:25.54%;height:9.80%"></span></button><figcaption>Click the branch name in the bottom-left status bar to open this panel.</figcaption></figure><figure class="shot" data-step="6" style="--w:1000px"><button class="shot-frame" type="button" aria-label="Enlarge screenshot: Pull request in GitHub on the Files changed tab, showing positions, SQL and Toolscript files"><img src="img/s09-github-pr.png" width="2000" height="1254" alt="Pull request in GitHub on the Files changed tab, showing positions, SQL and Toolscript files" loading="lazy"><span class="ring" style="left:30.56%;top:16.73%;width:11.25%;height:4.18%"></span><span class="ring" style="left:2.25%;top:34.26%;width:17.00%;height:23.11%"></span></button><figcaption>The pull request in GitHub. <strong>Files changed</strong> shows the Toolscript, SQL and position files.</figcaption></figure><figure class="shot" data-step="7" style="--w:1000px"><button class="shot-frame" type="button" aria-label="Enlarge screenshot: Source control settings page with the deployment dashboard and a Deploy latest button"><img src="img/s10-deployment-dashboard.png" width="2000" height="594" alt="Source control settings page with the deployment dashboard and a Deploy latest button" loading="lazy"><span class="ring" style="left:1.06%;top:55.16%;width:15.25%;height:6.74%"></span><span class="ring" style="left:75.69%;top:88.42%;width:6.62%;height:6.74%"></span></button><figcaption><span class="ui">Settings &rsaquo; Source control</span>. Every merge to main appears here as a deploy.</figcaption></figure></div>
+        </div>
+        <div class="loop-nav">
+          <span class="count" id="loop-count">Step 1 of 7</span>
+          <button class="btn" id="loop-prev" type="button">Previous</button>
+          <button class="btn primary" id="loop-next" type="button">Next step</button>
+        </div>
+      </div>
+    </section>
+
+    <section id="sync">
+      <div class="sec-head"><h3>Keep your branch up to date</h3></div>
+      <p>Teammates keep merging while you work. Your admin picks one of these two ways to bring their changes into your branch.</p>
+      <div class="two">
+        <div class="card">
+          <span class="tagline">Default</span>
+          <h4>Catch-up commits</h4>
+          <div class="mini">
+            <svg viewBox="0 0 320 124" role="img" aria-label="A teammate's merge on main is cherry-picked onto your branch as a catch-up commit">
+              <path class="lane m" d="M16,92 H304"/>
+              <path class="lane b" d="M40,92 C58,92 56,40 76,40 H304"/>
+              <circle class="node m" cx="40" cy="92" r="5"/>
+              <circle class="node b" cx="104" cy="40" r="6"/>
+              <circle class="node fill-m" cx="140" cy="92" r="6"/>
+              <path class="s-arrow m dash" d="M146,86 L184,48"/>
+              <circle class="node dashed" cx="192" cy="40" r="7"/>
+              <circle class="node b" cx="254" cy="40" r="6"/>
+              <text class="s-t b" x="16" y="22">your branch</text>
+              <text class="s-t m" x="192" y="22" text-anchor="middle">catch-up commit</text>
+              <text class="s-t muted" x="140" y="116" text-anchor="middle">teammate merges</text>
+              <text class="s-t m" x="304" y="116" text-anchor="end">main</text>
+            </svg>
+          </div>
+          <p>When you open something that changed on main, Retool copies the change onto your branch as an automatic commit. You don't need to do anything with it.</p>
+        </div>
+        <div class="card">
+          <span class="tagline">Beta</span>
+          <h4>Merge main into your branch</h4>
+          <div class="mini">
+            <svg viewBox="0 0 320 124" role="img" aria-label="Main is merged into your branch with a merge commit">
+              <path class="lane m" d="M16,92 H304"/>
+              <path class="lane b" d="M40,92 C58,92 56,40 76,40 H304"/>
+              <path class="lane m" d="M152,92 C178,92 172,40 198,40"/>
+              <circle class="node m" cx="40" cy="92" r="5"/>
+              <circle class="node b" cx="104" cy="40" r="6"/>
+              <circle class="node fill-m" cx="152" cy="92" r="6"/>
+              <circle class="node b" cx="198" cy="40" r="8"/>
+              <circle class="node b" cx="262" cy="40" r="6"/>
+              <text class="s-t b" x="16" y="22">your branch</text>
+              <text class="s-t b" x="198" y="22" text-anchor="middle">Commit merge</text>
+              <text class="s-t muted" x="152" y="116" text-anchor="middle">teammate merges</text>
+              <text class="s-t m" x="304" y="116" text-anchor="end">main</text>
+            </svg>
+          </div>
+          <p>Press <span class="ui">Merge main into &lt;branch&gt;</span>. If it merges cleanly, press <span class="ui">Commit merge</span>. If there are conflicts, fix the marked lines in the editor first; Retool checks the result before it lets you commit.</p>
+        </div>
+      </div>
+
+      <details class="more">
+        <summary>Resolving a conflict, file by file <span class="hint">When you hit one</span></summary>
+        <div class="more-body">
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>File</th><th>How to resolve</th></tr></thead>
+              <tbody>
+                <tr><td><code>metadata.json</code></td><td>Keep the later version number. If both sides changed a setting, keep one valid value.</td></tr>
+                <tr><td><code>.positions/*.json</code></td><td>Keys must stay unique. Same component moved twice: pick one position. Different components in one spot: keep both.</td></tr>
+                <tr><td><code>main.rsx</code>, <code>src/*.rsx</code></td><td>For an edited component, keep the correct change. New components can both stay; their order sets where they render.</td></tr>
+                <tr><td><code>lib/*</code></td><td>Resolve it like any other code conflict.</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="note warn">
+            <span class="note-label">Watch out</span>
+            <p>Broken Toolscript can fail deploys for everyone. Resolve inside Retool when you can, because it validates the result. If you resolve in your Git provider instead, merge right away and stop working on that branch in Retool.</p>
+          </div>
+          <div class="note">
+            <span class="note-label">Tip</span>
+            <p>When a conflict turns into a mess, start a fresh branch from main and redo the change. It's usually quicker.</p>
+          </div>
+          <p class="caption">Admin settings: <span class="ui">Settings &rsaquo; Beta &rsaquo; Enable branch merging</span> switches to merging and turns catch-up commits off. <span class="ui">Disable auto catch up commits</span> under <span class="ui">Settings &rsaquo; Source control</span> turns them off without merging, so builders rebase outside Retool. <a class="src" href="https://docs.retool.com/source-control/guides/branch-merging">Retool docs</a></p>
+        </div>
+      </details>
+    </section>
+
+    <section id="auto-commits">
+      <div class="sec-head"><h3>Check Retool&rsquo;s own commits before you merge</h3></div>
+      <p>Retool sometimes adds commits to your branch by itself, such as <strong>Retool generated schema changes</strong> or catch-up commits. They show up under your name. Most are harmless, but now and then one rolls back work that someone already merged, and your pull request quietly undoes it. Check for this <strong>last</strong>, once your work on the branch is finished and you&rsquo;re about to merge.</p>
+      <div class="two">
+        <div class="card">
+          <span class="tagline">What to look for in the Commits tab</span>
+          <ol class="commit-mock" aria-label="Example list of commits on a pull request">
+            <li class="bad"><span class="msg">Retool generated schema changes</span><span class="sha">1a2b3c4</span><span class="meta"><span class="auto-tag">Auto</span><span class="why">rolled back a teammate&rsquo;s change</span></span></li>
+            <li><span class="msg">Add search by email</span><span class="sha">5d6e7f8</span><span class="meta">your commit</span></li>
+            <li><span class="msg">Retool generated schema changes</span><span class="sha">9a0b1c2</span><span class="meta"><span class="auto-tag">Auto</span>harmless</span></li>
+            <li class="fix"><span class="msg">Revert &quot;Retool generated schema changes&quot;</span><span class="sha">3d4e5f6</span><span class="meta"><span class="why">the fix, made right before merging</span></span></li>
+          </ol>
+          <p class="caption">Example. Commit names and IDs are made up.</p>
+        </div>
+        <div class="card">
+          <span class="tagline">How to fix it</span>
+          <ol class="substeps">
+            <li>Finish all your work on the branch and commit it in Retool. The revert must be the last change on the branch.</li>
+            <li>Open the pull request&rsquo;s <strong>Commits</strong> tab in GitHub and find the auto-generated commits.</li>
+            <li>Open each one&rsquo;s diff. If it deletes or rolls back changes that aren&rsquo;t part of your work, that&rsquo;s the one. In our experience it&rsquo;s usually the <strong>first</strong> auto-generated commit on the branch.</li>
+            <li>Revert that commit from a local clone of the repo and push. A revert adds a new commit that undoes it, without rewriting history:</li>
+          </ol>
+<pre><code>git switch feature/order-search
+git pull
+git revert 1a2b3c4
+git push</code></pre>
+          <ol class="substeps" start="5">
+            <li>Check <strong>Files changed</strong> once more, then merge straight away.</li>
+          </ol>
+        </div>
+      </div>
+      <div class="note warn">
+        <span class="note-label">Revert last, and never reset</span>
+        <p><strong>Revert only when you&rsquo;re done.</strong> If you revert and then carry on working in Retool, you have to reset the branch to pick up the revert, and your next commit makes Retool generate another of these commits, which you&rsquo;d have to revert again. Finish everything, revert, merge.</p>
+        <p><strong>Use a revert, not a reset.</strong> A revert adds a commit. Dropping the bad commit with a reset or a force-push breaks things, because Retool tracks your branch history and gets stuck when commits disappear.</p>
+      </div>
+    </section>
+
+    <section id="releases">
+      <div class="sec-head"><h3>Getting your change live</h3></div>
+      <p>A merge updates main. Whether users see it straight away depends on releases.</p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Item</th><th>Users run</th><th>After you merge</th></tr></thead>
+          <tbody>
+            <tr><td>App without a published release</td><td>The latest version on main</td><td>Live once the deploy finishes.</td></tr>
+            <tr><td>App with a published release</td><td>The published release</td><td>Publish a new release.</td></tr>
+            <tr><td>Workflow</td><td>Its live release</td><td>Publish a new release.</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="note warn">
+        <span class="note-label">Pick one per app</span>
+        <p>Either main is what users see, or releases choose what's live. Both work. Mixing them on one app is what causes "I merged it but nothing changed." Decide per app and make sure the team knows.</p>
+      </div>
+      <details class="more">
+        <summary>Running different versions on dev, staging and prod <span class="hint">Multi-instance releases</span></summary>
+        <div class="more-body">
+          <p>By default a release exists only on the instance where you created it, and it isn't stored in Git. Turning on <span class="ui">Enable multi-instance releases</span> under <span class="ui">Settings &rsaquo; Source control &rsaquo; Edit settings</span> stores releases in Git, so staging can try release 15 while production stays on 14.</p>
+          <p>New app builder releases become Git tags. Classic apps and workflows are saved as zip files under <code>dist/apps/</code>, which grows the repo with every release. <a class="src" href="https://docs.retool.com/source-control/guides/multi-instance-releases/">Retool docs</a></p>
+        </div>
+      </details>
+    </section>
+
+    <section id="repo">
+      <div class="sec-head"><h3>Reviewing a pull request</h3></div>
+      <p>A Retool pull request is made of Toolscript, a JSX-like format designed for review. Pick a file to see what it holds and whether anyone should edit it by hand.</p>
+
+      <div class="explorer">
+        <div class="tree" role="tablist" aria-label="Files in a protected app" aria-orientation="vertical">
+          <div class="dir">apps/order-search/</div>
+          <button class="file ind1" role="tab" data-file="main" aria-selected="true"><span class="dot conflict"></span><span class="name">main.rsx</span></button>
+          <button class="file ind1" role="tab" data-file="functions" aria-selected="false" tabindex="-1"><span class="dot conflict"></span><span class="name">functions.rsx</span></button>
+          <button class="file ind1" role="tab" data-file="metadata" aria-selected="false" tabindex="-1"><span class="dot conflict"></span><span class="name">metadata.json</span></button>
+          <button class="file ind1" role="tab" data-file="defaults" aria-selected="false" tabindex="-1"><span class="dot never"></span><span class="name">.defaults.json</span></button>
+          <div class="dir ind1">lib/</div>
+          <button class="file ind2" role="tab" data-file="sql" aria-selected="false" tabindex="-1"><span class="dot safe"></span><span class="name">getOrders.sql</span></button>
+          <button class="file ind2" role="tab" data-file="js" aria-selected="false" tabindex="-1"><span class="dot safe"></span><span class="name">formatRows.js</span></button>
+          <div class="dir ind1">src/</div>
+          <button class="file ind2" role="tab" data-file="src" aria-selected="false" tabindex="-1"><span class="dot conflict"></span><span class="name">page1.rsx</span></button>
+          <div class="dir ind1">.positions/</div>
+          <button class="file ind2" role="tab" data-file="positions" aria-selected="false" tabindex="-1"><span class="dot conflict"></span><span class="name">.page1.positions.json</span></button>
+        </div>
+        <div>
+          <article class="file-panel" data-file="main" role="tabpanel">
+            <h4>main.rsx</h4>
+            <span class="verdict conflict"><span class="dot conflict"></span>Hand-edit only to fix a merge conflict</span>
+            <p>The app's entry point: every component with its id and properties. Nesting shows which component sits inside which.</p>
+            <span class="code-cap">Simplified example</span>
+<pre><code><span class="tk-tag">&lt;Container</span> <span class="tk-attr">id</span>=<span class="tk-str">"filtersContainer"</span><span class="tk-tag">&gt;</span>
+  <span class="tk-tag">&lt;Header&gt;</span>
+    <span class="tk-tag">&lt;Text</span> <span class="tk-attr">id</span>=<span class="tk-str">"filtersTitle"</span> <span class="tk-attr">value</span>=<span class="tk-str">"Find an order"</span> <span class="tk-tag">/&gt;</span>
+  <span class="tk-tag">&lt;/Header&gt;</span>
+  <span class="tk-tag">&lt;View&gt;</span>
+    <span class="tk-tag">&lt;TextInput</span> <span class="tk-attr">id</span>=<span class="tk-str">"searchInput"</span> <span class="tk-attr">placeholder</span>=<span class="tk-str">"Name or email"</span> <span class="tk-tag">/&gt;</span>
+    <span class="tk-tag">&lt;Button</span> <span class="tk-attr">id</span>=<span class="tk-str">"searchButton"</span> <span class="tk-attr">text</span>=<span class="tk-str">"Search"</span> <span class="tk-tag">/&gt;</span>
+  <span class="tk-tag">&lt;/View&gt;</span>
+<span class="tk-tag">&lt;/Container&gt;</span>
+
+<span class="tk-tag">&lt;Table</span> <span class="tk-attr">id</span>=<span class="tk-str">"ordersTable"</span> <span class="tk-attr">data</span>=<span class="tk-str">"{{ formatRows.data }}"</span> <span class="tk-tag">/&gt;</span></code></pre>
+            <p>The ids are the names you see in the editor. Renaming a component touches every file that refers to it.</p>
+          </article>
+          <article class="file-panel" data-file="functions" role="tabpanel" hidden>
+            <h4>functions.rsx</h4>
+            <span class="verdict conflict"><span class="dot conflict"></span>Hand-edit only to fix a merge conflict</span>
+            <p>Queries and functions available to the whole app. Each query is declared here and points at its body in <code>lib/</code>.</p>
+            <span class="code-cap">Simplified example</span>
+<pre><code><span class="tk-tag">&lt;SqlQueryUnified</span>
+  <span class="tk-attr">id</span>=<span class="tk-str">"getOrders"</span>
+  <span class="tk-attr">query</span>={<span class="tk-kw">include</span>(<span class="tk-str">"./lib/getOrders.sql"</span>, <span class="tk-str">"string"</span>)}
+  <span class="tk-attr">resourceDisplayName</span>=<span class="tk-str">"orders_db"</span>
+<span class="tk-tag">/&gt;</span></code></pre>
+          </article>
+          <article class="file-panel" data-file="metadata" role="tabpanel" hidden>
+            <h4>metadata.json</h4>
+            <span class="verdict conflict"><span class="dot conflict"></span>Hand-edit only to fix a merge conflict</span>
+            <p>Version information and app settings. If both sides bumped the version, keep the later number.</p>
+          </article>
+          <article class="file-panel" data-file="defaults" role="tabpanel" hidden>
+            <h4>.defaults.json</h4>
+            <span class="verdict never"><span class="dot never"></span>Leave it alone</span>
+            <p>Generated by Retool. You won't need to open it in review, and hand edits get overwritten.</p>
+          </article>
+          <article class="file-panel" data-file="sql" role="tabpanel" hidden>
+            <h4>lib/getOrders.sql</h4>
+            <span class="verdict safe"><span class="dot safe"></span>Safe to edit by hand</span>
+            <p>The body of a SQL query as a plain file. This is where to start reading a review, since query changes carry the most risk.</p>
+<pre><code><span class="tk-kw">select</span> id, customer_name, email, status
+<span class="tk-kw">from</span> orders
+<span class="tk-kw">where</span> email <span class="tk-kw">ilike</span> {{ <span class="tk-str">'%'</span> + searchInput.value + <span class="tk-str">'%'</span> }}
+<span class="tk-kw">order by</span> created_at <span class="tk-kw">desc</span>;</code></pre>
+            <p class="caption">If you change a branch outside Retool, reset the branch from the branch menu so Retool picks it up.</p>
+          </article>
+          <article class="file-panel" data-file="js" role="tabpanel" hidden>
+            <h4>lib/formatRows.js</h4>
+            <span class="verdict safe"><span class="dot safe"></span>Safe to edit by hand</span>
+            <p>The body of a JavaScript query. Same rules as the SQL files.</p>
+<pre><code><span class="tk-kw">const</span> rows = formatDataAsArray(getOrders.data);
+<span class="tk-kw">return</span> rows.map((row) =&gt; ({ ...row, status: row.status.toUpperCase() }));</code></pre>
+          </article>
+          <article class="file-panel" data-file="src" role="tabpanel" hidden>
+            <h4>src/page1.rsx</h4>
+            <span class="verdict conflict"><span class="dot conflict"></span>Hand-edit only to fix a merge conflict</span>
+            <p>In a multipage app, each page gets a file here with its components and the queries that belong to that page. Large containers can also be split out into this folder.</p>
+            <span class="code-cap">From a real pull request, trimmed</span>
+<pre><code><span class="tk-tag">&lt;SqlQueryUnified</span>
+  <span class="tk-attr">id</span>=<span class="tk-str">"query1"</span>
+  <span class="tk-attr">query</span>={<span class="tk-kw">include</span>(<span class="tk-str">"../lib/query1.sql"</span>, <span class="tk-str">"string"</span>)}
+  <span class="tk-attr">resourceDisplayName</span>=<span class="tk-str">"retool_db"</span>
+  <span class="tk-attr">resourceName</span>=<span class="tk-str">"&hellip;"</span>
+  <span class="tk-attr">warningCodes</span>={[]}
+<span class="tk-tag">/&gt;</span>
+<span class="tk-tag">&lt;Frame</span> <span class="tk-attr">id</span>=<span class="tk-str">"$main"</span> <span class="tk-attr">enableFullBleed</span>={<span class="tk-kw">false</span>}<span class="tk-tag">&gt;</span>
+  <span class="tk-com">&hellip; the page's components &hellip;</span>
+<span class="tk-tag">&lt;/Frame&gt;</span></code></pre>
+          </article>
+          <article class="file-panel" data-file="positions" role="tabpanel" hidden>
+            <h4>.positions/.page1.positions.json</h4>
+            <span class="verdict conflict"><span class="dot conflict"></span>Hand-edit only to fix a merge conflict</span>
+            <p>Where each component sits on the canvas, per page, with separate files for mobile. Kept apart from logic, so a big diff here usually just means someone moved things around.</p>
+            <span class="code-cap">From a real pull request</span>
+<pre><code>{
+  <span class="tk-str">"table1"</span>: { <span class="tk-attr">"row"</span>: 2.4, <span class="tk-attr">"col"</span>: 2, <span class="tk-attr">"height"</span>: 8, <span class="tk-attr">"width"</span>: 8 }
+}</code></pre>
+          </article>
+        </div>
+        <div class="legend">
+          <span><span class="dot safe"></span>safe to edit</span>
+          <span><span class="dot conflict"></span>conflicts only</span>
+          <span><span class="dot never"></span>leave alone</span>
+        </div>
+      </div>
+      <div class="shots"><figure class="shot" style="--w:1000px"><button class="shot-frame" type="button" aria-label="Enlarge screenshot: Pull request in GitHub on the Files changed tab, showing positions, SQL and Toolscript files"><img src="img/s09-github-pr.png" width="2000" height="1254" alt="Pull request in GitHub on the Files changed tab, showing positions, SQL and Toolscript files" loading="lazy"><span class="ring" style="left:30.56%;top:16.73%;width:11.25%;height:4.18%"></span><span class="ring" style="left:2.25%;top:34.26%;width:17.00%;height:23.11%"></span></button><figcaption>The pull request in GitHub. <strong>Files changed</strong> shows the Toolscript, SQL and position files.</figcaption></figure></div>
+      <div class="note">
+        <span class="note-label">Review order</span>
+        <p>Read <code>lib/</code> first, then the <code>.rsx</code> files for changed properties and renamed ids, then skim <code>.positions</code>. Finally, switch to the branch in Retool and click through the change yourself.</p>
+      </div>
+    </section>
+
+    <section id="rules">
+      <div class="sec-head"><h3>Checklist</h3></div>
+      <p>Tick these off as you go. Ticks are saved in this browser only.</p>
+      <div class="checks">
+        <div class="card">
+          <span class="tagline">Before you merge</span>
+          <ul class="checklist">
+            <li><label for="chk-1"><input type="checkbox" id="chk-1"><span>The status bar shows my branch, not main.</span></label></li>
+            <li><label for="chk-2"><input type="checkbox" id="chk-2"><span>The branch holds one change and is named after it.</span></label></li>
+            <li><label for="chk-3"><input type="checkbox" id="chk-3"><span>I read my own diff in <span class="ui">Review changes</span>.</span></label></li>
+            <li><label for="chk-4"><input type="checkbox" id="chk-4"><span>No secrets or hardcoded environment values.</span></label></li>
+            <li><label for="chk-5"><input type="checkbox" id="chk-5"><span>My branch has the latest main, with conflicts resolved.</span></label></li>
+            <li><label for="chk-6"><input type="checkbox" id="chk-6"><span>I used the app on the branch, not just the editor.</span></label></li>
+            <li><label for="chk-10"><input type="checkbox" id="chk-10"><span>Right before merging, I reverted any Retool-generated commit that undoes someone else&rsquo;s work.</span></label></li>
+          </ul>
+        </div>
+        <div class="card">
+          <span class="tagline">After it merges</span>
+          <ul class="checklist">
+            <li><label for="chk-7"><input type="checkbox" id="chk-7"><span>The deploy succeeded.</span></label></li>
+            <li><label for="chk-8"><input type="checkbox" id="chk-8"><span>I published a release, if this app uses them.</span></label></li>
+            <li><label for="chk-9"><input type="checkbox" id="chk-9"><span>I deleted the branch.</span></label></li>
+          </ul>
+          <span class="tagline bad">Never</span>
+          <ul class="never-list">
+            <li><strong>Force-push, rebase or reset main.</strong></li>
+            <li><strong>Hand-edit Toolscript</strong> outside a conflict.</li>
+            <li><strong>Add files to the repo by hand.</strong> Even a stray <code>.DS_Store</code> can break deploys.</li>
+            <li><strong>Keep working on a merged branch.</strong></li>
+          </ul>
+        </div>
+      </div>
+      <div class="check-foot">
+        <span class="progress" id="check-progress">0 of 9 ticked</span>
+        <button class="btn" id="check-reset" type="button">Clear ticks</button>
+      </div>
+    </section>
+
+    <div class="part-foot">
+      <button class="btn" type="button" data-go="start"><small>Back</small>&larr; Before you start</button>
+      <button class="btn primary next" type="button" data-go="reference"><small>Next</small>Troubleshooting &amp; glossary &rarr;</button>
+    </div>
+  </div>
+
+  <!-- =================================================================
+       PART 3 · TROUBLESHOOTING & GLOSSARY
+       ================================================================= -->
+  <div class="part" id="reference" role="tabpanel" aria-labelledby="ptab-reference" hidden>
+    <div class="part-head">
+      <div class="eyebrow">Part 3 of 3 · look things up</div>
+      <h2>Troubleshooting &amp; glossary</h2>
+      <p>Come back here when something doesn't behave, or when a word in Retool doesn't make sense.</p>
+      <div class="search">
+        <label for="ref-search">Search fixes and terms</label>
+        <input id="ref-search" type="search" placeholder="Try &quot;release&quot;, &quot;conflict&quot; or &quot;images&quot;" autocomplete="off">
+      </div>
+    </div>
+
+    <section id="trouble">
+      <div class="sec-head"><h3>Troubleshooting</h3></div>
+      <div class="table-wrap">
+        <table class="t-trouble">
+          <thead><tr><th>What you see</th><th>Likely cause</th><th>Fix</th></tr></thead>
+          <tbody>
+            <tr><td>Merged, but users don't see the change</td><td>The app or workflow runs a published release.</td><td>Publish a new release.</td></tr>
+            <tr><td>A teammate&rsquo;s change disappeared after a merge</td><td>A Retool-generated commit on the branch rolled it back.</td><td>Revert that commit. See <a href="#auto-commits">Check Retool&rsquo;s own commits</a>.</td></tr>
+            <tr><td>I can't edit the app</td><td>You're on main, and the app is protected.</td><td>Create a branch, or switch to yours in the bottom-left status bar.</td></tr>
+            <tr><td>Deploys fail after a merge</td><td>A hand edit left broken Toolscript.</td><td>Find the commit in the Deployment Dashboard, revert or fix it, then <span class="ui">Deploy latest</span>.</td></tr>
+            <tr><td>Retool refers to commits that no longer exist</td><td>History was rewritten with a force-push, rebase or reset.</td><td>Export the affected apps as JSON, create a new branch, import them, commit again.</td></tr>
+            <tr><td>Deploys broke after someone touched the repo</td><td>Unexpected files, such as <code>.DS_Store</code>.</td><td>Remove them and commit.</td></tr>
+            <tr><td>Retool can't reach the Git provider</td><td>Wrong connection details, a partial URL, or a network block.</td><td>Deployment Dashboard, <span class="ui">Edit config</span>, then <span class="ui">Test connection</span>.</td></tr>
+            <tr><td>Can't create branches, commits or pull requests</td><td>Missing permissions on the Git side.</td><td>Give the app read and write access to contents and pull requests.</td></tr>
+            <tr><td>Images missing on another instance</td><td>Images live on the instance where they were uploaded.</td><td>Host images at a public URL.</td></tr>
+            <tr><td>Can't rename or move a protected workflow</td><td>By design.</td><td>Remove protection, rename, protect again.</td></tr>
+            <tr><td>Self-hosted syncing stalls</td><td>The jobs-runner container is short on resources (under 4 CPU or 4 GB RAM) or blocked by a firewall.</td><td>Give it more resources or open the route to your provider.</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="empty" id="trouble-empty" hidden>No fixes match that search.</p>
+      <p class="caption">Most rows come from Retool's troubleshooting guide. <a class="src" href="https://docs.retool.com/source-control/guides/troubleshooting">Retool docs</a></p>
+    </section>
+
+    <section id="glossary">
+      <div class="sec-head"><h3>Glossary</h3></div>
+      <dl class="gloss">
+        <div><dt>Protected</dt><dd>Under source control. The main version is locked in the editor, and changes go through branches.</dd></div>
+        <div><dt>Branch owner</dt><dd>The person who created a branch. Only they can delete or rebase it.</dd></div>
+        <div><dt>Collaborative branch</dt><dd>A branch created with <span class="ui">Allow collaborators</span> ticked, so anyone in the organization can commit to it. Only admins can rename, reset or delete it.</dd></div>
+        <div><dt>Catch-up commit</dt><dd>An automatic commit that copies changes from main onto your branch.</dd></div>
+        <div><dt>Toolscript</dt><dd>Retool's JSX-like file format for protected items. Files end in <code>.rsx</code>.</dd></div>
+        <div><dt>Deployment Dashboard</dt><dd>The admin view of recent deploys, with status, commit, duration and logs.</dd></div>
+        <div><dt>Deploy latest</dt><dd>A full deploy that syncs everything from main, started by an admin. Normal deploys sync only what changed.</dd></div>
+        <div><dt>Release</dt><dd>A published version of an app or workflow that users run. Stored per instance by default.</dd></div>
+        <div><dt>Multi-instance release</dt><dd>A release stored in Git, so different instances can run different versions.</dd></div>
+        <div><dt>Space</dt><dd>An isolated area inside one Retool instance, with its own apps, resources and Source Control settings.</dd></div>
+        <div><dt>Configuration variable</dt><dd>A named value that can differ per Space or instance, used instead of hardcoded URLs and keys.</dd></div>
+        <div><dt>Read-only instance</dt><dd>A self-hosted instance with <code>VERSION_CONTROL_LOCKED</code> set. It only receives deploys.</dd></div>
+      </dl>
+      <p class="empty" id="gloss-empty" hidden>No terms match that search.</p>
+    </section>
+
+    <section id="sources">
+      <div class="sec-head"><h3>Sources</h3></div>
+      <ul class="sources">
+        <li><a href="https://docs.retool.com/source-control/">Source Control overview</a></li>
+        <li><a href="https://docs.retool.com/source-control/quickstart">Quickstart</a></li>
+        <li><a href="https://docs.retool.com/source-control/guides/protect/apps">Protect classic apps</a></li>
+        <li><a href="https://docs.retool.com/source-control/guides/protect/apps-v2">Protect apps (new app builder)</a></li>
+        <li><a href="https://docs.retool.com/source-control/guides/protect/workflows">Protect workflows</a></li>
+        <li><a href="https://docs.retool.com/source-control/guides/protect/resources">Protect resources</a></li>
+        <li><a href="https://docs.retool.com/source-control/guides/manage-branches">Manage branches</a></li>
+        <li><a href="https://docs.retool.com/source-control/guides/collaborative-branches">Collaborative branches</a></li>
+        <li><a href="https://docs.retool.com/source-control/guides/branch-merging">Update branches and resolve conflicts</a></li>
+        <li><a href="https://docs.retool.com/source-control/concepts/catch-up-commits">Catch-up commits</a></li>
+        <li><a href="https://docs.retool.com/source-control/concepts/toolscript">Toolscript</a></li>
+        <li><a href="https://docs.retool.com/source-control/concepts/best-practices">Best practices</a></li>
+        <li><a href="https://docs.retool.com/source-control/concepts/multi-instance-development">Multi-instance development</a></li>
+        <li><a href="https://docs.retool.com/source-control/guides/multi-instance-releases/">Multi-instance releases</a></li>
+        <li><a href="https://docs.retool.com/source-control/guides/manage-deployment">Manage deployments</a></li>
+        <li><a href="https://docs.retool.com/source-control/guides/test-deploy">Test deployments</a></li>
+        <li><a href="https://docs.retool.com/source-control/guides/troubleshooting">Troubleshooting</a></li>
+        <li><a href="https://docs.retool.com/source-control/reference/environment-variables">Environment variables</a></li>
+        <li>Setup: <a href="https://docs.retool.com/source-control/tutorials/github">GitHub</a> · <a href="https://docs.retool.com/source-control/tutorials/gitlab">GitLab</a> · <a href="https://docs.retool.com/source-control/tutorials/bitbucket">Bitbucket</a></li>
+        <li>Setup: <a href="https://docs.retool.com/source-control/tutorials/azure-repos">Azure Repos</a> · <a href="https://docs.retool.com/source-control/tutorials/aws-codecommit">AWS CodeCommit</a></li>
+        <li>GitHub docs: <a href="https://docs.github.com/en/apps/creating-github-apps/about-creating-github-apps/about-creating-github-apps">About creating GitHub Apps</a></li>
+        <li>GitHub docs: <a href="https://docs.github.com/en/apps/creating-github-apps/registering-a-github-app/registering-a-github-app">Registering a GitHub App</a></li>
+      </ul>
+    </section>
+
+    <div class="part-foot">
+      <button class="btn" type="button" data-go="workflow"><small>Back</small>&larr; Everyday workflow</button>
+    </div>
+  </div>
+
+  </main>
+
+  <footer class="foot">
+    <span class="wordmark">Stackdrop</span>
+    <span>Retool Source Control Handbook</span>
+    <span>Checked against Retool docs in October 2026. If a label here doesn't match your screen, trust your screen.</span>
+  </footer>
+</div>
+
+<dialog class="lightbox" id="lightbox" aria-label="Screenshot">
+  <div class="lb-bar"><span id="lb-cap"></span><button class="lb-close" id="lb-close" type="button">Close</button></div>
+  <img id="lb-img" alt="">
+</dialog>
+
+<script>
+(function () {
+  function $all(sel, root) { return Array.prototype.slice.call((root || document).querySelectorAll(sel)); }
+
+  /* ---- part tabs ---- */
+  var partTabs = $all('.part-tab');
+  var parts = $all('.part');
+  var bar = document.getElementById('parts-bar');
+  var currentPart = 'start';
+
+  function showPart(id, opts) {
+    opts = opts || {};
+    if (!document.getElementById(id)) return;
+    currentPart = id;
+    partTabs.forEach(function (t) {
+      var on = t.dataset.part === id;
+      t.setAttribute('aria-selected', on ? 'true' : 'false');
+      t.tabIndex = on ? 0 : -1;
+      if (on && opts.focus) t.focus();
+    });
+    parts.forEach(function (p) { p.hidden = p.id !== id; });
+    if (opts.scrollTop && bar.getBoundingClientRect().top < 0) {
+      bar.scrollIntoView({ block: 'start' });
+    }
+  }
+  partTabs.forEach(function (t, i) {
+    t.addEventListener('click', function () { showPart(t.dataset.part, { scrollTop: true }); setHash(t.dataset.part); });
+    t.addEventListener('keydown', function (e) {
+      var j = null;
+      if (e.key === 'ArrowRight') j = (i + 1) % partTabs.length;
+      if (e.key === 'ArrowLeft') j = (i - 1 + partTabs.length) % partTabs.length;
+      if (j !== null) { e.preventDefault(); showPart(partTabs[j].dataset.part, { focus: true }); setHash(partTabs[j].dataset.part); }
+    });
+  });
+  $all('[data-go]').forEach(function (b) {
+    b.addEventListener('click', function () {
+      showPart(b.dataset.go);
+      bar.scrollIntoView({ block: 'start' });
+      setHash(b.dataset.go);
+    });
+  });
+
+  function setHash(id) { try { history.replaceState(null, '', '#' + id); } catch (e) {} }
+
+  /* in-page links open the right part first */
+  function goTo(id, smooth) {
+    var el = document.getElementById(id);
+    if (!el) return false;
+    var part = el.closest('.part');
+    if (part) showPart(part.id);
+    if (el.tagName === 'DETAILS') el.open = true;
+    var inner = el.querySelector && el.querySelector('details.more');
+    if (id === 'setup' && inner) inner.open = true;
+    if (!el.classList.contains('part')) {
+      el.scrollIntoView({ behavior: smooth ? 'smooth' : 'auto', block: 'start' });
+    } else {
+      bar.scrollIntoView({ block: 'start' });
+    }
+    return true;
+  }
+  document.addEventListener('click', function (e) {
+    var a = e.target.closest && e.target.closest('a[href^="#"]');
+    if (!a) return;
+    var id = a.getAttribute('href').slice(1);
+    if (!id) return;
+    if (goTo(id, true)) { e.preventDefault(); setHash(id); }
+  });
+  var initial = (location.hash || '').slice(1);
+  if (initial && /^[A-Za-z0-9._~-]+$/.test(initial)) { goTo(initial, false); }
+
+  /* ---- change loop stepper ---- */
+  var tabs = $all('.step-btn');
+  var panels = $all('.step-panel');
+  var groups = $all('#loop-graph [data-step]');
+  var prev = document.getElementById('loop-prev');
+  var next = document.getElementById('loop-next');
+  var count = document.getElementById('loop-count');
+  var total = tabs.length;
+  var shotsRow = document.getElementById('loop-shots');
+  var stepShots = $all('#loop-shots figure.shot');
+  var cur = 1;
+  function show(n, focus) {
+    cur = Math.max(1, Math.min(total, n));
+    tabs.forEach(function (b) {
+      var s = +b.dataset.step;
+      b.setAttribute('aria-selected', s === cur ? 'true' : 'false');
+      b.tabIndex = s === cur ? 0 : -1;
+      b.classList.toggle('done', s < cur);
+      if (s === cur && focus) b.focus();
+    });
+    panels.forEach(function (p) { p.hidden = +p.dataset.step !== cur; });
+    groups.forEach(function (g) {
+      var s = +g.dataset.step;
+      g.classList.toggle('future', s > cur);
+      g.classList.toggle('current', s === cur);
+    });
+    var anyShot = false;
+    stepShots.forEach(function (f) { var on = +f.dataset.step === cur; f.hidden = !on; if (on) anyShot = true; });
+    shotsRow.hidden = !anyShot;
+    prev.disabled = cur === 1;
+    next.disabled = cur === total;
+    next.textContent = cur === total ? 'Loop complete' : 'Next step';
+    count.textContent = 'Step ' + cur + ' of ' + total;
+  }
+  tabs.forEach(function (b) {
+    b.addEventListener('click', function () { show(+b.dataset.step); });
+    b.addEventListener('keydown', function (e) {
+      if (e.key === 'ArrowRight') { e.preventDefault(); show(cur + 1, true); }
+      if (e.key === 'ArrowLeft') { e.preventDefault(); show(cur - 1, true); }
+    });
+  });
+  prev.addEventListener('click', function () { show(cur - 1); });
+  next.addEventListener('click', function () { show(cur + 1); });
+  show(1);
+
+  /* ---- screenshot lightbox ---- */
+  var lb = document.getElementById('lightbox');
+  var lbImg = document.getElementById('lb-img');
+  var lbCap = document.getElementById('lb-cap');
+  $all('.shot-frame').forEach(function (b) {
+    b.addEventListener('click', function () {
+      var img = b.querySelector('img');
+      lbImg.src = img.src; lbImg.alt = img.alt;
+      var cap = b.parentNode.querySelector('figcaption');
+      lbCap.textContent = cap ? cap.textContent : '';
+      if (lb.showModal) { try { lb.showModal(); } catch (e) { lb.setAttribute('open', ''); } } else { lb.setAttribute('open', ''); }
+    });
+  });
+  function closeLb() { if (lb.close) { lb.close(); } else { lb.removeAttribute('open'); } }
+  document.getElementById('lb-close').addEventListener('click', closeLb);
+  lb.addEventListener('click', function (e) { if (e.target === lb) closeLb(); });
+
+  /* ---- repo explorer ---- */
+  var files = $all('.file');
+  var filePanels = $all('.file-panel');
+  function openFile(key, focus) {
+    files.forEach(function (f) {
+      var on = f.dataset.file === key;
+      f.setAttribute('aria-selected', on ? 'true' : 'false');
+      f.tabIndex = on ? 0 : -1;
+      if (on && focus) f.focus();
+    });
+    filePanels.forEach(function (p) { p.hidden = p.dataset.file !== key; });
+  }
+  files.forEach(function (f, i) {
+    f.addEventListener('click', function () { openFile(f.dataset.file); });
+    f.addEventListener('keydown', function (e) {
+      var j = null;
+      if (e.key === 'ArrowDown') j = Math.min(files.length - 1, i + 1);
+      if (e.key === 'ArrowUp') j = Math.max(0, i - 1);
+      if (j !== null) { e.preventDefault(); openFile(files[j].dataset.file, true); }
+    });
+  });
+
+  /* ---- checklist (this browser only) ---- */
+  var KEY = 'stackdrop-retool-sc-checklist-v2';
+  var boxes = $all('.checklist input[type="checkbox"]');
+  var progress = document.getElementById('check-progress');
+  var saved = {};
+  try { saved = JSON.parse(localStorage.getItem(KEY) || '{}') || {}; } catch (e) { saved = {}; }
+  function update() {
+    var n = boxes.filter(function (b) { return b.checked; }).length;
+    progress.textContent = n + ' of ' + boxes.length + ' ticked';
+  }
+  boxes.forEach(function (b) {
+    if (saved[b.id]) b.checked = true;
+    b.addEventListener('change', function () {
+      saved[b.id] = b.checked;
+      try { localStorage.setItem(KEY, JSON.stringify(saved)); } catch (e) {}
+      update();
+    });
+  });
+  document.getElementById('check-reset').addEventListener('click', function () {
+    boxes.forEach(function (b) { b.checked = false; });
+    saved = {};
+    try { localStorage.removeItem(KEY); } catch (e) {}
+    update();
+  });
+  update();
+
+  /* ---- reference search ---- */
+  var search = document.getElementById('ref-search');
+  var rows = $all('#trouble tbody tr');
+  var terms = $all('#glossary .gloss > div');
+  var tEmpty = document.getElementById('trouble-empty');
+  var gEmpty = document.getElementById('gloss-empty');
+  var tableWrap = document.querySelector('#trouble .table-wrap');
+  search.addEventListener('input', function () {
+    var q = search.value.trim().toLowerCase();
+    var tHits = 0, gHits = 0;
+    rows.forEach(function (r) { var hit = !q || r.textContent.toLowerCase().indexOf(q) > -1; r.hidden = !hit; if (hit) tHits++; });
+    terms.forEach(function (d) { var hit = !q || d.textContent.toLowerCase().indexOf(q) > -1; d.hidden = !hit; if (hit) gHits++; });
+    tEmpty.hidden = tHits > 0;
+    tableWrap.hidden = tHits === 0;
+    gEmpty.hidden = gHits > 0;
+  });
+})();
+</script>
+</body>
+</html>
