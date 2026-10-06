@@ -1480,6 +1480,12 @@ git push</code></pre>
   var bar = document.getElementById('parts-bar');
   var currentPart = 'start';
 
+  /* scroll so el sits just under the sticky tab bar (scrollIntoView on a sticky bar misfires) */
+  function scrollToEl(el, smooth) {
+    var y = el.getBoundingClientRect().top + window.pageYOffset - bar.offsetHeight - 16;
+    window.scrollTo({ top: Math.max(0, y), behavior: smooth ? 'smooth' : 'auto' });
+  }
+
   function showPart(id, opts) {
     opts = opts || {};
     if (!document.getElementById(id)) return;
@@ -1491,8 +1497,9 @@ git push</code></pre>
       if (on && opts.focus) t.focus();
     });
     parts.forEach(function (p) { p.hidden = p.id !== id; });
-    if (opts.scrollTop && bar.getBoundingClientRect().top < 0) {
-      bar.scrollIntoView({ block: 'start' });
+    if (opts.scrollTop) {
+      var shown = document.getElementById(id);
+      if (shown.getBoundingClientRect().top < bar.offsetHeight) scrollToEl(shown);
     }
   }
   partTabs.forEach(function (t, i) {
@@ -1507,7 +1514,7 @@ git push</code></pre>
   $all('[data-go]').forEach(function (b) {
     b.addEventListener('click', function () {
       showPart(b.dataset.go);
-      bar.scrollIntoView({ block: 'start' });
+      scrollToEl(document.getElementById(b.dataset.go));
       setHash(b.dataset.go);
     });
   });
@@ -1523,11 +1530,7 @@ git push</code></pre>
     if (el.tagName === 'DETAILS') el.open = true;
     var inner = el.querySelector && el.querySelector('details.more');
     if (id === 'setup' && inner) inner.open = true;
-    if (!el.classList.contains('part')) {
-      el.scrollIntoView({ behavior: smooth ? 'smooth' : 'auto', block: 'start' });
-    } else {
-      bar.scrollIntoView({ block: 'start' });
-    }
+    scrollToEl(el, smooth);
     return true;
   }
   document.addEventListener('click', function (e) {
@@ -1538,7 +1541,12 @@ git push</code></pre>
     if (goTo(id, true)) { e.preventDefault(); setHash(id); }
   });
   var initial = (location.hash || '').slice(1);
-  if (initial && /^[A-Za-z0-9._~-]+$/.test(initial)) { goTo(initial, false); }
+  if (initial && /^[A-Za-z0-9._~-]+$/.test(initial)) {
+    try { history.scrollRestoration = 'manual'; } catch (e) {}
+    goTo(initial, false);
+    // the browser's own fragment scroll and late-loading images can move things; settle once loaded
+    window.addEventListener('load', function () { goTo(initial, false); });
+  }
 
   /* ---- change loop stepper ---- */
   var tabs = $all('.step-btn');
